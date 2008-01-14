@@ -70,6 +70,9 @@ char *translate(char *line)
 			return trans->display;
 	}
 	
+	c = strstr(line, "()");
+	if (c) { *c = ' '; *(c+1)= ' '; }
+	
 	return line;
 }
 

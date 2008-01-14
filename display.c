@@ -128,15 +128,17 @@ void print_global_list(void)
 {
 	GList *item;
 	struct latency_line *line;
-	int i = 0;
+	int i = 1;
 
+	mvwprintw(global_window, 0, 0, "Cause");
+	mvwprintw(global_window, 0, 50, "Maximum                 Average\n");
 	item = g_list_first(lines);
 	while (item && i < 10) {
 		line = item->data;
 		item = g_list_next(item);
-		mvwprintw(global_window, i, 0, "%4.1f msec: %s (%5.2f msec)\n",
+		mvwprintw(global_window, i, 0, "%s", translate(line->reason));
+		mvwprintw(global_window, i, 50, "%3.1f msec               %5.2f msec\n",
 				line->max * 0.001,
-				translate(line->reason),
 				(line->time * 0.001 +0.0001) / line->count);
 		i++;
 	}
