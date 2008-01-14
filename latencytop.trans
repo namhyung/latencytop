@@ -7,9 +7,13 @@ Unknown reason (do_wait| Waiting for processes to die (waitpid)
 Unknown reason (sync_page| Writing a page to disk
 Unknown reason (sync_buffer| Writing a buffer to disk
 Unknown reason (tty_wait_until_sent| Waiting for TTY output to finish sending
+Unknown reason (read_chan| Reading from tty
 Unknown reason (do_sys_poll| Waiting for event (poll)
 Unknown reason (kthread_create| Creating kernel thread
 Unknown reason (futex_wait| Waiting for userspace lock
 Unknown reason (sched_exec| Scheduler rebalancing for exec()
 Unknown reason (do_get_write_access| EXT3 journal write access
 Unknown reason (sk_wait_data| Waiting for network data
+Unknown reason (do_select| Waiting for user data
+Unknown reason (flock_lock_file_wait| Waiting for a lockfile
+Unknown reason (pipe_release| Cleaning up a pipe

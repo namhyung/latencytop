@@ -146,7 +146,7 @@ void print_global_list(void)
 
 void display_process_list(unsigned int cursor_pid)
 {
-	GList *entry, *start;
+	GList *entry, *start = NULL;
 	struct process *proc;
 	int i = 0;
 	werase(process_window);
@@ -187,7 +187,7 @@ void display_process_list(unsigned int cursor_pid)
 
 int one_pid_back(unsigned int cursor_pid)
 {
-	GList *entry, *start;
+	GList *entry, *start = NULL;
 	struct process *proc;
 
 	entry = procs;
@@ -210,7 +210,7 @@ int one_pid_back(unsigned int cursor_pid)
 
 int one_pid_forward(unsigned int cursor_pid)
 {
-	GList *entry, *start;
+	GList *entry, *start = NULL;
 	struct process *proc;
 
 	entry = procs;

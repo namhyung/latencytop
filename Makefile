@@ -1,5 +1,5 @@
-CFLAGS = -O0 -g -Wall -W `pkg-config --cflags glib-2.0` `pkg-config --libs glib-2.0` -D_FORTIFY_SOURCE=2
-
+CFLAGS = -O2 -g -Wall -W `pkg-config --cflags glib-2.0`  -D_FORTIFY_SOURCE=2
+LDF = -Wl,--as-needed `pkg-config --libs glib-2.0`   -lncursesw 
 
 #
 # The w in -lncursesw is not a typo; it is the wide-character version
@@ -9,9 +9,9 @@ CFLAGS = -O0 -g -Wall -W `pkg-config --cflags glib-2.0` `pkg-config --libs glib-
 # On Debian/Ubuntu distros, this can be found in the
 # libncursesw5-dev package. 
 #
-latencytop: latencytop.c display.c latencytop.h translate.c Makefile
-	gcc $(CFLAGS) latencytop.c display.c translate.c -lncursesw -o latencytop 
+latencytop: latencytop.o display.o latencytop.h translate.o Makefile
+	gcc $(CFLAGS) latencytop.o display.o translate.o $(LDF)-o latencytop 
 
 
 clean:
-	rm -f *~ latencytop DEADJOE
+	rm -f *~ latencytop DEADJOE *.o
