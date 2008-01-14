@@ -1,0 +1,15 @@
+Unknown reason (pipe_wait| Waiting for pipe data
+Unknown reason (tty_write| Waiting for TTY write completion
+Unknown reason (call_usermodehelper_exe)| Waiting for userspace upcall
+Unknown reason (do_lookup| Filename lookup
+Unknown reason (unix_stream_recvmsg| Unix stream waiting for data
+Unknown reason (do_wait| Waiting for processes to die (waitpid)
+Unknown reason (sync_page| Writing a page to disk
+Unknown reason (sync_buffer| Writing a buffer to disk
+Unknown reason (tty_wait_until_sent| Waiting for TTY output to finish sending
+Unknown reason (do_sys_poll| Waiting for event (poll)
+Unknown reason (kthread_create| Creating kernel thread
+Unknown reason (futex_wait| Waiting for userspace lock
+Unknown reason (sched_exec| Scheduler rebalancing for exec()
+Unknown reason (do_get_write_access| EXT3 journal write access
+Unknown reason (sk_wait_data| Waiting for network data
