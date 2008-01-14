@@ -17,3 +17,6 @@ Unknown reason (sk_wait_data| Waiting for network data
 Unknown reason (do_select| Waiting for user data
 Unknown reason (flock_lock_file_wait| Waiting for a lockfile
 Unknown reason (pipe_release| Cleaning up a pipe
+Unknown reason (chrdev_open| Opening character device file
+Unknown reason (open_namei| Opening file
+Unknown reason (do_unlinkat| Unlinking file
