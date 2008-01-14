@@ -1,7 +1,3 @@
-/* PRERELEASE SOFTWARE -- DO NOT DISTRIBUTE
-	eventual license shown below
- */
-
 /*
  * Copyright 2007, Intel Corporation
  *
