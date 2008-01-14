@@ -78,8 +78,8 @@ void setup_windows(void)
 
 	title_bar_window = subwin(stdscr, 1, maxx, 0, 0);
 	global_window = subwin(stdscr, 10, maxx, 2, 0);
-	process_window = subwin(stdscr, 10, maxx/2-15, 13, 0);
-	right_window = subwin(stdscr, 10, maxx/2+15, 13, maxx/2-15);
+	process_window = subwin(stdscr, 10, 25, 20, maxx-25);
+	right_window = subwin(stdscr, 10, maxx, 13, 0);
 
 	werase(stdscr);
 	refresh();
@@ -127,13 +127,13 @@ void print_global_list(void)
 	int i = 1;
 
 	mvwprintw(global_window, 0, 0, "Cause");
-	mvwprintw(global_window, 0, 50, "Maximum                 Average\n");
+	mvwprintw(global_window, 0, 50, "  Maximum          Average\n");
 	item = g_list_first(lines);
 	while (item && i < 10) {
 		line = item->data;
 		item = g_list_next(item);
 		mvwprintw(global_window, i, 0, "%s", translate(line->reason));
-		mvwprintw(global_window, i, 50, "%3.1f msec               %5.2f msec\n",
+		mvwprintw(global_window, i, 50, "%5.1f msec        %5.1f msec\n",
 				line->max * 0.001,
 				(line->time * 0.001 +0.0001) / line->count);
 		i++;
@@ -251,9 +251,9 @@ void print_process(unsigned int pid)
 		while (item2 && i < 6) {
 			line = item2->data;
 			item2 = g_list_next(item2);
-			mvwprintw(right_window, i+1, 0, "%4.1f msec: %s (%5.2f msec x %i)\n",
+			mvwprintw(right_window, i+1, 0, "%s", translate(line->reason));
+			mvwprintw(right_window, i+1, 50, "%5.1f msec        %5.1f msec	%ix\n",
 				line->max * 0.001,
-				translate(line->reason),
 				(line->time * 0.001 +0.0001) / line->count,
 				line->count
 				);

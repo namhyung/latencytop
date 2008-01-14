@@ -20,3 +20,6 @@ Unknown reason (pipe_release| Cleaning up a pipe
 Unknown reason (chrdev_open| Opening character device file
 Unknown reason (open_namei| Opening file
 Unknown reason (do_unlinkat| Unlinking file
+Unknown reason (proc_lookup| /proc filesystem operation
+Unknown reason (hrtimer_nanosleep| Application requested delay
+Unknown reason (lookup_create| Creating a file
