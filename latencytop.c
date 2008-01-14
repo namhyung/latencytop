@@ -204,6 +204,8 @@ void parse_process(struct process *process)
 			ln->max = strtoull(c, &c, 10);
 			c2 = strchr(c, '\n');
 			if (c2) *c2=0;
+			if (*c==' ') c++;
+			if (*c=='\t') c++;
 			strcpy(ln->reason, c);
 
 			if (ln->max > process->max)
