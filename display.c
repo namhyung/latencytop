@@ -78,7 +78,7 @@ void setup_windows(void)
 
 	title_bar_window = subwin(stdscr, 1, maxx, 0, 0);
 	global_window = subwin(stdscr, 10, maxx, 2, 0);
-	process_window = subwin(stdscr, 10, 25, 20, maxx-25);
+	process_window = subwin(stdscr, 1, maxx, 24, 0);
 	right_window = subwin(stdscr, 10, maxx, 13, 0);
 
 	werase(stdscr);
@@ -146,7 +146,7 @@ void display_process_list(unsigned int cursor_pid)
 {
 	GList *entry, *start = NULL;
 	struct process *proc;
-	int i = 0;
+	int i = 0, xpos = 0;
 	werase(process_window);
 
 	entry = procs;
@@ -168,12 +168,14 @@ void display_process_list(unsigned int cursor_pid)
 
 	/* and print 7 */
 	i = 0;
-	while (i<7 && start) {
+	while (xpos < maxx && start) {
 		proc = start->data;	
 
 		if (proc->pid == cursor_pid)
 			wattron(process_window, A_REVERSE);
-		mvwprintw(process_window, i, 0, "%4.1f %s \n", proc->max*0.001, proc->name);		
+		mvwprintw(process_window, 0, xpos, " %s ", proc->name);
+		xpos += strlen(proc->name)+2;
+		
 		wattroff(process_window, A_REVERSE);
 
 		start = g_list_next(start);
@@ -317,9 +319,9 @@ void update_display(int duration)
 					keychar = fgetc(stdin);	
 			}
 			keychar = toupper(keychar);
-			if (keychar == 'Z' || keychar == 'A')
+			if (keychar == 'Z' || keychar == 'A' || keychar == 'D')
 				pid_with_max = one_pid_back(pid_with_max);
-			if (keychar == 'X' || keychar == 'B') 
+			if (keychar == 'X' || keychar == 'B' || keychar == 'C') 
 				pid_with_max = one_pid_forward(pid_with_max);
 			if (keychar == 'Q') 
 				exit(EXIT_SUCCESS);
