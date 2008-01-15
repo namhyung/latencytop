@@ -1,0 +1,85 @@
+body {
+  background-color: #ffffff;
+  font: 80% Verdana, Arial, Helvetica, sans-serif;
+}
+
+td.even {
+  background-color: #DDDDDD;
+  text-decoration: none;
+}
+
+td.odd {
+  background-color: #DDEECC;
+  text-decoration: none;
+}
+
+th.top {
+  background-color: #000000;
+  color: #FFFFFF;
+}
+
+tr.even {
+  background-color: #E7E7E7;
+}
+
+tr.odd {
+  background-color: #D0D0D0;
+}
+
+
+.topver {
+  background-color: #000000;
+  color: #ffffff;
+  padding: 4px;
+
+  text-decoration: none;
+  font-weight:bold;
+}
+
+.plainlink {
+  text-decoration: none;
+  color: #BB4444;
+}
+
+
+.pre10 {
+	color: #000000;
+}
+.pre9 {
+	color: #444444;
+}
+.pre8 {
+	color: #666666;
+}
+.pre7 {
+	color: #777777;
+}
+.pre6 {
+	color: #888888;
+}
+.pre5 {
+	color: #999999;
+}
+.pre4 {
+	color: #AAAAAA;
+}
+.pre3 {
+	color: #BBBBBB;
+}
+.pre2 {
+	color: #CCCCCC;
+}
+.pre1 {
+	color: #DDDDDD;
+}
+.pre0 {
+	color: #EEEEEE;
+}
+
+#header {
+	width: 1124; height: 128px;
+	text-align: left;
+	background: url(logo.png); }
+
+#search { float: right; margin: 20px 15px 0 10px; }
+#search input { font: 11px Arial, Helvetica, sans-serif; }

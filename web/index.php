@@ -1,1 +1,5 @@
+<? 
+include("topbar.php");
+?>
+
 foo
