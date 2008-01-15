@@ -210,6 +210,7 @@ void parse_process(struct process *process)
 			free(line);
 			continue;
 		}
+		free(line);
 		while (!feof(file)) {
 			struct latency_line *ln;
 			char *c, *c2;
