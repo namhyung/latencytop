@@ -43,9 +43,12 @@ static WINDOW *global_window;
 static WINDOW *process_window;
 static WINDOW *right_window;
 
+static GList *cursor_e = NULL;
+
 static void cleanup_curses(void) {
 	endwin();
 }
+
 
 static void zap_windows(void)
 {
@@ -150,30 +153,38 @@ void display_process_list(unsigned int cursor_pid)
 	werase(process_window);
 
 	entry = procs;
-	while (entry) {
-		proc = entry->data;
-		if (proc->pid == cursor_pid) {
-			start = entry;
-			break;
-		}	
-		entry = g_list_next(entry);
+	
+retry:
+	xpos = 0;
+	start = cursor_e;	
+	if (!start) {
+		start = g_list_first(procs);
+		cursor_e = start;
 	}
-	/* go back 3 */
-	if (g_list_previous(start))
-			start = g_list_previous(start);
-	if (g_list_previous(start))
-			start = g_list_previous(start);
-	if (g_list_previous(start))
-			start = g_list_previous(start);
+		
+		
+	proc = start->data;
+	while (proc->pid > cursor_pid && cursor_pid > 0) {
+		start = g_list_previous(start);
+		proc = start->data;
+		cursor_e = start;
+	}
 
 	/* and print 7 */
 	i = 0;
-	while (xpos < maxx && start) {
+	while (start) {
 		proc = start->data;	
 
-		if (proc->pid == cursor_pid)
+		if (proc->pid == cursor_pid) {
+			if (xpos + strlen(proc->name) + 2 > maxx && cursor_e) {
+				cursor_e = g_list_next(cursor_e);
+				goto retry;
+			}
 			wattron(process_window, A_REVERSE);
-		mvwprintw(process_window, 0, xpos, " %s ", proc->name);
+		}
+		
+		if (xpos + strlen(proc->name) + 2< maxx) 
+			mvwprintw(process_window, 0, xpos, " %s ", proc->name);
 		xpos += strlen(proc->name)+2;
 		
 		wattroff(process_window, A_REVERSE);
@@ -328,10 +339,13 @@ void update_display(int duration)
 				pid_with_max = one_pid_forward(pid_with_max);
 			if (keychar == 'Q') 
 				exit(EXIT_SUCCESS);
-			if (keychar == 'R') 
+			if (keychar == 'R') {
+				cursor_e = NULL;
 				return;
+			}
 			if (keychar < 32)
 				repaint = 0;
 		}
 	}
+	cursor_e = NULL;
 }
