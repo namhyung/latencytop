@@ -183,7 +183,7 @@ retry:
 			wattron(process_window, A_REVERSE);
 		}
 		
-		if (xpos + strlen(proc->name) + 2< maxx) 
+		if (xpos + strlen(proc->name) + 2 < maxx) 
 			mvwprintw(process_window, 0, xpos, " %s ", proc->name);
 		xpos += strlen(proc->name)+2;
 		
@@ -260,7 +260,7 @@ void print_process(unsigned int pid)
 			continue;
 		wattron(right_window, A_REVERSE);
 		sprintf(header, "Process %s (%i) ", proc->name, proc->pid);
-		while ((int)strlen(header) < maxx)
+		while (strlen(header) < maxx)
 			strcat(header, " ");
 		mvwprintw(right_window, 0, 0, "%s", header);
 		wattroff(right_window, A_REVERSE);

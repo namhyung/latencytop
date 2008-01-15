@@ -1,4 +1,4 @@
-CFLAGS = -O0 -g -Wall -W `pkg-config --cflags glib-2.0`  -D_FORTIFY_SOURCE=2
+CFLAGS = -O0 -g -Wall -W `pkg-config --cflags glib-2.0`  -D_FORTIFY_SOURCE=2 -Wno-sign-compare
 LDF = -Wl,--as-needed `pkg-config --libs glib-2.0`   -lncursesw 
 
 #
