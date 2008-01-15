@@ -183,7 +183,7 @@ retry:
 			wattron(process_window, A_REVERSE);
 		}
 		
-		if (xpos + strlen(proc->name) + 2< maxx) 
+		if (xpos + strlen(proc->name) + 2 <= maxx) 
 			mvwprintw(process_window, 0, xpos, " %s ", proc->name);
 		xpos += strlen(proc->name)+2;
 		
