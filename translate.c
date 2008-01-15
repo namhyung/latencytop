@@ -22,6 +22,8 @@
  * 	Arjan van de Ven <arjan@linux.intel.com>
  */
 
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -82,14 +84,21 @@ void init_translations(char *filename)
 		return;
 	while (!feof(file)) {
 		struct translate_line *trans;
-		char line[4096];
-		memset(line, 0, 4096);
-		fgets(line, 4095, file);
-		if (line[0]=='#')
+		size_t dummy;
+		char *line = NULL;
+		if (getline(&line, &dummy, file) <= 0) {
+			free(line);
+			break;
+		}
+		if (line[0]=='#') {
+			free(line);
 			continue;
+		}
 		c1 = strchr(line,'|');
-		if (!c1)
+		if (!c1) {
+			free(line);
 			continue;
+		}
 		*c1=0;
 		c1++;
 		while (*c1==' ' || *c1=='\t') c1++;
@@ -100,5 +109,7 @@ void init_translations(char *filename)
 		strcpy(trans->display, c1);
 		
 		translations = g_list_append(translations, trans);
+		free(line);
 	}
+	fclose(file);
 }

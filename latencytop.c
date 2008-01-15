@@ -22,6 +22,8 @@
  * 	Arjan van de Ven <arjan@linux.intel.com>
  */
 
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -47,21 +49,33 @@ int firsttime = 1;
 void parse_global_list(void)
 {
 	FILE *file;
-	char ln[4096];
+	char *ln;
+	size_t dummy;
 	file = fopen("/proc/latency_stats","r+");
 	if (!file)
 		return;
 	/* wipe first line */
-	fgets(ln, 4096, file);
+	ln = NULL;
+	if (getline(&ln, &dummy, file) < 0) {
+		free(ln);
+		fclose(file);
+		return;
+	}
+	free(ln);
 	total_time = 0;
 	total_count = 0;
 	while (!feof(file)) {
 		struct latency_line *line;
 		char *c, *c2;
-		memset(ln, 0, 4096);
-		fgets(&ln[0], 4095, file);
-		if (strlen(ln)<2)
+		ln = NULL;
+		if (getline(&ln, &dummy, file) < 0) {
+			free(ln);
 			break;
+		}
+		if (strlen(ln)<2) {
+			free(ln);
+			break;
+		}
 		line = malloc(sizeof(struct latency_line));
 		memset(line, 0, sizeof(struct latency_line));
 		line->count = strtoull(ln, &c, 10);
@@ -75,6 +89,8 @@ void parse_global_list(void)
 		strcpy(line->reason, c);
 
 		lines = g_list_append(lines, line);
+		free(ln);
+		ln = NULL;
 	}
 	/* reset for next time */
 	fprintf(file, "erase\n");
@@ -175,7 +191,8 @@ void parse_process(struct process *process)
 		return;
 	while ((dirent = readdir(dir))) {
 		FILE *file;
-		char line[4096];
+		char *line = NULL;
+		size_t dummy;
 		int pid;
 		if (dirent->d_name[0]=='.')
 			continue;
@@ -189,14 +206,22 @@ void parse_process(struct process *process)
 		if (!file)
 			continue;
 		/* wipe first line*/
-		fgets(line, 4096, file);
+		if (getline(&line, &dummy, file) < 0) {
+			free(line);
+			continue;
+		}
 		while (!feof(file)) {
 			struct latency_line *ln;
 			char *c, *c2;
-			memset(line, 0, 4096);
-			fgets(&line[0], 4095, file);
-			if (strlen(line)<2)
+			line = NULL;
+			if (getline(&line, &dummy, file) < 0) {
+				free(line);
 				break;
+			}
+			if (strlen(line)<2) {
+				free(line);
+				break;
+			}
 			ln = malloc(sizeof(struct latency_line));
 			memset(ln, 0, sizeof(struct latency_line));
 			ln->count = strtoull(line, &c, 10);
@@ -212,6 +237,8 @@ void parse_process(struct process *process)
 				process->max = ln->max;
 			process->latencies = g_list_append(process->latencies, ln);
 			process->used = 1;
+			free(line);
+			line = NULL;
 		}
 		/* reset for next time */
 		fprintf(file, "erase\n");
@@ -271,7 +298,8 @@ void parse_processes(void)
 		return;
 	while ((dirent = readdir(dir))) {
 		FILE *file;
-		char line[1024];
+		char *line;
+		size_t dummy;
 		int pid;
 		if (dirent->d_name[0]=='.')
 			continue;
@@ -286,11 +314,15 @@ void parse_processes(void)
 		file = fopen(filename, "r");
 		if (file) {
 			char *q;
-			fgets(line, 1023, file);
-			strncpy(&process->name[0], &line[6], 64);
-			q = strchr(process->name, '\n');
-			if (q) *q=0;
-			fclose(file);
+			line = NULL;
+			if (getline(&line, &dummy, file) >= 0) {
+				strncpy(&process->name[0], &line[6], 64);
+				q = strchr(process->name, '\n');
+				if (q) *q=0;
+				fclose(file);
+			}
+			free(line);
+			line = NULL;
 		}
 
 		sprintf(filename, "/proc/%i/sched", pid);
@@ -298,14 +330,19 @@ void parse_processes(void)
 		if (file) {
 			char *q;
 			double d;
-			memset(line, 0, 1024);
 			while (!feof(file)) {
-				fgets(line, 1023, file);
+				line = NULL;
+				if (getline(&line, &dummy, file) < 0) {
+					free(line);
+					break;
+				}
 				q = strchr(line, ':');
 				if (strstr(line, "se.wait_max") && q) {
 					sscanf(q+1,"%lf", &d);
 					process->maxdelay = d;
 				}
+				free(line);
+				line = NULL;
 			}
 			fprintf(file,"erase");
 			fclose(file);
@@ -314,11 +351,14 @@ void parse_processes(void)
 		sprintf(filename, "/proc/%i/statm", pid);
 		file = fopen(filename, "r");
 		if (file) {
-			fgets(line, 1023, file);
-			if (strcmp(line, "0 0 0 0 0 0 0\n")==0)
-				process->kernelthread = 1;
-
+			line = NULL;
+			if (getline(&line, &dummy, file) >= 0) {
+				if (strcmp(line, "0 0 0 0 0 0 0\n")==0)
+					process->kernelthread = 1;
+			}
 			fclose(file);
+			free(line);
+			line = NULL;
 		}
 
 		parse_process(process);
