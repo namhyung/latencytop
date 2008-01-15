@@ -21,9 +21,10 @@
  kernel/futex.c            |    8 +++++++-
  kernel/mutex.c            |   13 +++++++++++++
  kernel/rwsem.c            |   12 +++++++++++-
+ lib/Kconfig.debug         |    8 ++++++++
  mm/filemap.c              |    6 ++++++
  mm/slub.c                 |    7 ++++++-
- 24 files changed, 202 insertions(+), 11 deletions(-)
+ 25 files changed, 210 insertions(+), 11 deletions(-)
 
 Index: linux-2.6.24-rc7/arch/x86/mm/fault_64.c
 ===================================================================

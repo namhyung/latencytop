@@ -1,18 +1,19 @@
 ---
- fs/proc/base.c             |   55 ++++++++
- include/linux/latencytop.h |   42 ++++++
- include/linux/sched.h      |    4 
- kernel/Makefile            |    2 
+ fs/proc/base.c             |   61 +++++++++
+ include/linux/latencytop.h |   59 +++++++++
+ include/linux/sched.h      |    6 
+ kernel/Makefile            |    1 
  kernel/fork.c              |    1 
  kernel/latencytop.c        |  284 +++++++++++++++++++++++++++++++++++++++++++++
  kernel/sched_fair.c        |    8 +
- 7 files changed, 394 insertions(+), 2 deletions(-)
+ lib/Kconfig.debug          |    8 +
+ 8 files changed, 427 insertions(+), 1 deletion(-)
 
 Index: linux-2.6.24-rc7/include/linux/latencytop.h
 ===================================================================
 --- /dev/null
 +++ linux-2.6.24-rc7/include/linux/latencytop.h
-@@ -0,0 +1,42 @@
+@@ -0,0 +1,59 @@
 +/*
 + * latencytop.h: Infrastructure for displaying latency
 + *
@@ -23,6 +24,8 @@ Index: linux-2.6.24-rc7/include/linux/latencytop.h
 +
 +#ifndef _INCLUDE_GUARD_LATENCYTOP_H_
 +#define _INCLUDE_GUARD_LATENCYTOP_H_
++
++#ifdef CONFIG_LATENCYTOP
 +
 +struct latency_entry {
 +	char	*reason;
@@ -52,7 +55,22 @@ Index: linux-2.6.24-rc7/include/linux/latencytop.h
 +void account_scheduler_latency(struct task_struct *task, int usecs, int inter);
 +
 +void clear_all_latency_tracing(struct task_struct *p);
++#else
++struct latency_entry {};
++static inline struct latency_entry *set_latency_reason(char *reason,
++			struct latency_entry *entry) { return NULL; }
++static inline struct latency_entry *set_latency_reason_user(char *reason,
++			struct latency_entry *entry, unsigned int max)
++				{ return NULL; }
++static inline struct latency_entry *set_latency_reason_param(char *reason,
++			const char *param, struct latency_entry *entry)
++				{ return NULL; }
++static inline void restore_latency_reason(struct latency_entry *entry) { }
++static inline void account_scheduler_latency(struct task_struct *task,
++		int usecs, int inter) {};
++static inline void clear_all_latency_tracing(struct task_struct *p) {};
 +
++#endif
 +
 +#endif
 Index: linux-2.6.24-rc7/include/linux/sched.h
@@ -67,13 +85,15 @@ Index: linux-2.6.24-rc7/include/linux/sched.h
  
  #include <asm/processor.h>
  
-@@ -1178,6 +1179,9 @@ struct task_struct {
+@@ -1178,6 +1179,11 @@ struct task_struct {
  	int make_it_fail;
  #endif
  	struct prop_local_single dirties;
++#ifdef CONFIG_LATENCYTOP
 +	struct latency_entry latency_reason;
 +	int latency_record_count;
 +	struct latency_record latency_record[32];
++#endif
  };
  
  /*
@@ -382,15 +402,14 @@ Index: linux-2.6.24-rc7/kernel/Makefile
 ===================================================================
 --- linux-2.6.24-rc7.orig/kernel/Makefile
 +++ linux-2.6.24-rc7/kernel/Makefile
-@@ -9,7 +9,7 @@ obj-y     = sched.o fork.o exec_domain.o
- 	    rcupdate.o extable.o params.o posix-timers.o \
- 	    kthread.o wait.o kfifo.o sys_ni.o posix-cpu-timers.o mutex.o \
- 	    hrtimer.o rwsem.o latency.o nsproxy.o srcu.o \
--	    utsname.o notifier.o
-+	    utsname.o notifier.o latencytop.o
+@@ -57,6 +57,7 @@ obj-$(CONFIG_SYSCTL) += utsname_sysctl.o
+ obj-$(CONFIG_TASK_DELAY_ACCT) += delayacct.o
+ obj-$(CONFIG_TASKSTATS) += taskstats.o tsacct.o
+ obj-$(CONFIG_MARKERS) += marker.o
++obj-$(CONFIG_LATENCYTOP) += latencytop.o
  
- obj-$(CONFIG_SYSCTL) += sysctl_check.o
- obj-$(CONFIG_STACKTRACE) += stacktrace.o
+ ifneq ($(CONFIG_SCHED_NO_NO_OMIT_FRAME_POINTER),y)
+ # According to Alan Modra <alan@linuxcare.com.au>, the -fno-omit-frame-pointer is
 Index: linux-2.6.24-rc7/kernel/sched_fair.c
 ===================================================================
 --- linux-2.6.24-rc7.orig/kernel/sched_fair.c
@@ -442,10 +461,11 @@ Index: linux-2.6.24-rc7/fs/proc/base.c
 ===================================================================
 --- linux-2.6.24-rc7.orig/fs/proc/base.c
 +++ linux-2.6.24-rc7/fs/proc/base.c
-@@ -310,6 +310,58 @@ static int proc_pid_schedstat(struct tas
+@@ -310,6 +310,60 @@ static int proc_pid_schedstat(struct tas
  }
  #endif
  
++#ifdef CONFIG_LATENCYTOP
 +static int lstats_show_proc(struct seq_file *m, void *v)
 +{
 +	int i;
@@ -497,11 +517,12 @@ Index: linux-2.6.24-rc7/fs/proc/base.c
 +	.release	= single_release,
 +};
 +
++#endif
 +
  /* The badness from the OOM killer */
  unsigned long badness(struct task_struct *p, unsigned long uptime);
  static int proc_oom_score(struct task_struct *task, char *buffer)
-@@ -1020,6 +1072,7 @@ static const struct file_operations proc
+@@ -1020,6 +1074,7 @@ static const struct file_operations proc
  };
  #endif
  
@@ -509,19 +530,40 @@ Index: linux-2.6.24-rc7/fs/proc/base.c
  #ifdef CONFIG_SCHED_DEBUG
  /*
   * Print out various scheduling related per-task fields:
-@@ -2230,6 +2283,7 @@ static const struct pid_entry tgid_base_
+@@ -2230,6 +2285,9 @@ static const struct pid_entry tgid_base_
  #ifdef CONFIG_SCHEDSTATS
  	INF("schedstat",  S_IRUGO, pid_schedstat),
  #endif
++#ifdef CONFIG_LATENCYTOP
 +	REG("latency",  S_IRUGO, lstats),
++#endif
  #ifdef CONFIG_PROC_PID_CPUSET
  	REG("cpuset",     S_IRUGO, cpuset),
  #endif
-@@ -2555,6 +2609,7 @@ static const struct pid_entry tid_base_s
+@@ -2555,6 +2613,9 @@ static const struct pid_entry tid_base_s
  #ifdef CONFIG_SCHEDSTATS
  	INF("schedstat", S_IRUGO, pid_schedstat),
  #endif
++#ifdef CONFIG_LATENCYTOP
 +	REG("latency",  S_IRUGO, lstats),
++#endif
  #ifdef CONFIG_PROC_PID_CPUSET
  	REG("cpuset",    S_IRUGO, cpuset),
  #endif
+Index: linux-2.6.24-rc7/lib/Kconfig.debug
+===================================================================
+--- linux-2.6.24-rc7.orig/lib/Kconfig.debug
++++ linux-2.6.24-rc7/lib/Kconfig.debug
+@@ -517,4 +517,12 @@ config FAULT_INJECTION_STACKTRACE_FILTER
+ 	help
+ 	  Provide stacktrace filter for fault-injection capabilities
+ 
++config LATENCYTOP
++	bool "Latency measuring infrastructure"
++	select FRAME_POINTER
++	help
++	  Enable this option if you want to use the LatencyTOP tool
++	  to find out which userspace is blocking on what kernel operations.
++
++
+ source "samples/Kconfig"
