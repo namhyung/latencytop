@@ -137,6 +137,9 @@ void print_global_list(void)
 	while (item && i < 10) {
 		line = item->data;
 		item = g_list_next(item);
+		
+		if (line->max*0.001 < 0.1) 
+			continue;
 		mvwprintw(global_window, i, 0, "%s", translate(line->reason));
 		mvwprintw(global_window, i, 50, "%5.1f msec        %5.1f msec\n",
 				line->max * 0.001,
@@ -270,6 +273,8 @@ void print_process(unsigned int pid)
 		while (item2 && i < 6) {
 			line = item2->data;
 			item2 = g_list_next(item2);
+			if (line->max*0.001 < 0.1)
+				continue;
 			mvwprintw(right_window, i+1, 0, "%s", translate(line->reason));
 			mvwprintw(right_window, i+1, 50, "%5.1f msec        %5.1f msec",
 				line->max * 0.001,
