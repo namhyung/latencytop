@@ -45,7 +45,8 @@ static WINDOW *right_window;
 
 static GList *cursor_e = NULL;
 
-static void cleanup_curses(void) {
+void cleanup_curses(void) 
+{
 	endwin();
 }
 
@@ -166,7 +167,9 @@ retry:
 		start = g_list_first(procs);
 		cursor_e = start;
 	}
-		
+	
+	if (!start)
+		return;	
 		
 	proc = start->data;
 	while (proc->pid > cursor_pid && cursor_pid > 0) {

@@ -52,8 +52,12 @@ void parse_global_list(void)
 	char *ln;
 	size_t dummy;
 	file = fopen("/proc/latency_stats","r+");
-	if (!file)
-		return;
+	if (!file) {
+		cleanup_curses() ;
+		fprintf(stderr, "Please enable the CONFIG_LATENCYTOP configuration in your kernel.\n");
+		fprintf(stderr, "Exiting...\n");
+		exit(EXIT_FAILURE);
+	}
 	/* wipe first line */
 	ln = NULL;
 	if (getline(&ln, &dummy, file) < 0) {

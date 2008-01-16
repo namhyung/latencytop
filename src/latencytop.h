@@ -40,3 +40,4 @@ extern void update_display(int duration);
 extern void initialize_curses(void);
 extern char *translate(char *line);
 extern void init_translations(char *filename);
+extern void cleanup_curses(void);
