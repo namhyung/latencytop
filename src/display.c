@@ -75,14 +75,16 @@ int maxx, maxy;
 
 void setup_windows(void) 
 {
+	int midy;
 	getmaxyx(stdscr, maxy, maxx);
 
 	zap_windows();	
 
+	midy = (maxy+4)/2;
 	title_bar_window = subwin(stdscr, 1, maxx, 0, 0);
-	global_window = subwin(stdscr, 10, maxx, 2, 0);
+	global_window = subwin(stdscr, midy-4 , maxx, 2, 0);
 	process_window = subwin(stdscr, 1, maxx, maxy-1, 0);
-	right_window = subwin(stdscr, 10, maxx, 13, 0);
+	right_window = subwin(stdscr, (maxy-midy-3), maxx, midy, 0);
 
 	werase(stdscr);
 	refresh();
