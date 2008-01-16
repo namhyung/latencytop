@@ -1,19 +1,19 @@
 ---
  fs/proc/base.c             |   61 +++++++++
- include/linux/latencytop.h |   59 +++++++++
+ include/linux/latencytop.h |   62 +++++++++
  include/linux/sched.h      |    6 
  kernel/Makefile            |    1 
  kernel/fork.c              |    1 
- kernel/latencytop.c        |  284 +++++++++++++++++++++++++++++++++++++++++++++
+ kernel/latencytop.c        |  287 +++++++++++++++++++++++++++++++++++++++++++++
  kernel/sched_fair.c        |    8 +
  lib/Kconfig.debug          |    8 +
- 8 files changed, 427 insertions(+), 1 deletion(-)
+ 8 files changed, 433 insertions(+), 1 deletion(-)
 
 Index: linux-2.6.24-rc7/include/linux/latencytop.h
 ===================================================================
 --- /dev/null
 +++ linux-2.6.24-rc7/include/linux/latencytop.h
-@@ -0,0 +1,59 @@
+@@ -0,0 +1,62 @@
 +/*
 + * latencytop.h: Infrastructure for displaying latency
 + *
@@ -27,16 +27,19 @@ Index: linux-2.6.24-rc7/include/linux/latencytop.h
 +
 +#ifdef CONFIG_LATENCYTOP
 +
++#define LT_ARGUMENTSIZE 24
++#define LT_SAVECOUNT 32
++
 +struct latency_entry {
 +	char	*reason;
-+	char	argument[17];
++	char	argument[LT_ARGUMENTSIZE];
 +	int	maxtime;         /* ignore latencies above this time as
 +				    "user requested" to deal with select() */
 +};
 +
 +struct latency_record {
 +	char 	*reason;
-+	char	argument[24];
++	char	argument[LT_ARGUMENTSIZE];
 +	unsigned int count;
 +	unsigned long time;
 +	unsigned long max;
@@ -92,7 +95,7 @@ Index: linux-2.6.24-rc7/include/linux/sched.h
 +#ifdef CONFIG_LATENCYTOP
 +	struct latency_entry latency_reason;
 +	int latency_record_count;
-+	struct latency_record latency_record[32];
++	struct latency_record latency_record[LT_SAVECOUNT];
 +#endif
  };
  
@@ -113,7 +116,7 @@ Index: linux-2.6.24-rc7/kernel/latencytop.c
 ===================================================================
 --- /dev/null
 +++ linux-2.6.24-rc7/kernel/latencytop.c
-@@ -0,0 +1,284 @@
+@@ -0,0 +1,287 @@
 +/*
 + * latencytop.c: Latency display infrastructure
 + *
@@ -147,6 +150,7 @@ Index: linux-2.6.24-rc7/kernel/latencytop.c
 +{
 +	unsigned long flags;
 +	spin_lock_irqsave(&latency_lock, flags);
++
 +	*entry = current->latency_reason;
 +	if (current->latency_reason.reason) {
 +		spin_unlock_irqrestore(&latency_lock, flags);
@@ -165,6 +169,7 @@ Index: linux-2.6.24-rc7/kernel/latencytop.c
 +{
 +	unsigned long flags;
 +	spin_lock_irqsave(&latency_lock, flags);
++
 +	*entry = current->latency_reason;
 +	if (current->latency_reason.reason) {
 +		spin_unlock_irqrestore(&latency_lock, flags);
@@ -183,6 +188,7 @@ Index: linux-2.6.24-rc7/kernel/latencytop.c
 +{
 +	unsigned long flags;
 +	spin_lock_irqsave(&latency_lock, flags);
++
 +	*entry = current->latency_reason;
 +	if (current->latency_reason.reason) {
 +		spin_unlock_irqrestore(&latency_lock, flags);
@@ -309,7 +315,7 @@ Index: linux-2.6.24-rc7/kernel/latencytop.c
 +	account_global_scheduler_latency(tsk, usecs);
 +
 +	/* check if the reason is already in the table */
-+	for (i = 0; i < 32; i++) {
++	for (i = 0; i < LT_SAVECOUNT; i++) {
 +		/* nothing stored */
 +		if (!tsk->latency_record[i].reason)
 +			continue;
@@ -330,7 +336,7 @@ Index: linux-2.6.24-rc7/kernel/latencytop.c
 +	}
 +	/* short term hack; if we're > 32 we stop; future we recycle */
 +	tsk->latency_record_count++;
-+	if (tsk->latency_record_count >= 32) {
++	if (tsk->latency_record_count >= LT_SAVECOUNT) {
 +		spin_unlock_irqrestore(&latency_lock, flags);
 +		return;
 +	}
