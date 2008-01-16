@@ -155,11 +155,11 @@ void display_process_list(unsigned int cursor_pid)
 	GList *entry, *start = NULL;
 	struct process *proc;
 	int i = 0, xpos = 0;
-	werase(process_window);
 
 	entry = procs;
 	
 retry:
+	werase(process_window);
 	xpos = 0;
 	start = cursor_e;	
 	if (!start) {
