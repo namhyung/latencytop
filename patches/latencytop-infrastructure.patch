@@ -6,8 +6,8 @@
  kernel/fork.c              |    1 
  kernel/latencytop.c        |  287 +++++++++++++++++++++++++++++++++++++++++++++
  kernel/sched_fair.c        |    8 +
- lib/Kconfig.debug          |    8 +
- 8 files changed, 433 insertions(+), 1 deletion(-)
+ lib/Kconfig.debug          |   11 +
+ 8 files changed, 436 insertions(+), 1 deletion(-)
 
 Index: linux-2.6.24-rc7/include/linux/latencytop.h
 ===================================================================
@@ -560,13 +560,16 @@ Index: linux-2.6.24-rc7/lib/Kconfig.debug
 ===================================================================
 --- linux-2.6.24-rc7.orig/lib/Kconfig.debug
 +++ linux-2.6.24-rc7/lib/Kconfig.debug
-@@ -517,4 +517,12 @@ config FAULT_INJECTION_STACKTRACE_FILTER
+@@ -517,4 +517,15 @@ config FAULT_INJECTION_STACKTRACE_FILTER
  	help
  	  Provide stacktrace filter for fault-injection capabilities
  
 +config LATENCYTOP
 +	bool "Latency measuring infrastructure"
-+	select FRAME_POINTER
++	select FRAME_POINTER if !X86 && !MIPS
++	select KALLSYMS
++	select KALLSYMS_ALL
++	depends on SCHEDSTATS
 +	help
 +	  Enable this option if you want to use the LatencyTOP tool
 +	  to find out which userspace is blocking on what kernel operations.
