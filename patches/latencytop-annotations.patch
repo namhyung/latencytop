@@ -70,30 +70,10 @@ Index: linux-2.6.24-rc7/block/ll_rw_blk.c
  	return rq;
  }
  
-Index: linux-2.6.24-rc7/drivers/scsi/hosts.c
-===================================================================
---- linux-2.6.24-rc7.orig/drivers/scsi/hosts.c
-+++ linux-2.6.24-rc7/drivers/scsi/hosts.c
-@@ -65,7 +65,6 @@ static struct class shost_class = {
- int scsi_host_set_state(struct Scsi_Host *shost, enum scsi_host_state state)
- {
- 	enum scsi_host_state oldstate = shost->shost_state;
--
- 	if (state == oldstate)
- 		return 0;
- 
 Index: linux-2.6.24-rc7/drivers/scsi/scsi_error.c
 ===================================================================
 --- linux-2.6.24-rc7.orig/drivers/scsi/scsi_error.c
 +++ linux-2.6.24-rc7/drivers/scsi/scsi_error.c
-@@ -66,7 +66,6 @@ void scsi_eh_wakeup(struct Scsi_Host *sh
- void scsi_schedule_eh(struct Scsi_Host *shost)
- {
- 	unsigned long flags;
--
- 	spin_lock_irqsave(shost->host_lock, flags);
- 
- 	if (scsi_host_set_state(shost, SHOST_RECOVERY) == 0 ||
 @@ -228,11 +227,16 @@ void scsi_times_out(struct scsi_cmnd *sc
  int scsi_block_when_processing_errors(struct scsi_device *sdev)
  {
