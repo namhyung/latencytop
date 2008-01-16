@@ -12,7 +12,7 @@
  fs/inode.c                |   13 +++++++++++++
  fs/jbd/checkpoint.c       |    6 ++++++
  fs/jbd/commit.c           |    5 +++++
- fs/jbd/journal.c          |    7 +++++++
+ fs/jbd/journal.c          |    5 +++++
  fs/jbd/transaction.c      |   13 +++++++++++++
  fs/pipe.c                 |    5 +++++
  fs/select.c               |    3 +++
@@ -21,10 +21,9 @@
  kernel/futex.c            |    8 +++++++-
  kernel/mutex.c            |   13 +++++++++++++
  kernel/rwsem.c            |   12 +++++++++++-
- lib/Kconfig.debug         |    8 ++++++++
  mm/filemap.c              |    6 ++++++
  mm/slub.c                 |    7 ++++++-
- 25 files changed, 210 insertions(+), 11 deletions(-)
+ 24 files changed, 200 insertions(+), 11 deletions(-)
 
 Index: linux-2.6.24-rc7/arch/x86/mm/fault_64.c
 ===================================================================
@@ -588,16 +587,7 @@ Index: linux-2.6.24-rc7/fs/jbd/journal.c
  
  #include <asm/uaccess.h>
  #include <asm/page.h>
-@@ -131,6 +132,8 @@ static int kjournald(void *arg)
- 	printk(KERN_INFO "kjournald starting.  Commit interval %ld seconds\n",
- 			journal->j_commit_interval / HZ);
- 
-+	current->ioprio =  (IOPRIO_CLASS_RT << IOPRIO_CLASS_SHIFT) | 4;
-+
- 	/*
- 	 * And now, wait forever for commit wakeup events.
- 	 */
-@@ -1335,6 +1338,9 @@ int journal_flush(journal_t *journal)
+@@ -1335,6 +1336,9 @@ int journal_flush(journal_t *journal)
  	int err = 0;
  	transaction_t *transaction = NULL;
  	unsigned long old_tail;
@@ -607,7 +597,7 @@ Index: linux-2.6.24-rc7/fs/jbd/journal.c
  
  	spin_lock(&journal->j_state_lock);
  
-@@ -1384,6 +1390,7 @@ int journal_flush(journal_t *journal)
+@@ -1384,6 +1388,7 @@ int journal_flush(journal_t *journal)
  	J_ASSERT(journal->j_head == journal->j_tail);
  	J_ASSERT(journal->j_tail_sequence == journal->j_transaction_sequence);
  	spin_unlock(&journal->j_state_lock);
