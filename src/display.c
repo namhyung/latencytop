@@ -81,7 +81,7 @@ void setup_windows(void)
 
 	title_bar_window = subwin(stdscr, 1, maxx, 0, 0);
 	global_window = subwin(stdscr, 10, maxx, 2, 0);
-	process_window = subwin(stdscr, 1, maxx, 24, 0);
+	process_window = subwin(stdscr, 1, maxx, maxy-1, 0);
 	right_window = subwin(stdscr, 10, maxx, 13, 0);
 
 	werase(stdscr);
