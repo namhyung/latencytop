@@ -17,7 +17,7 @@ Index: linux-2.6.24-rc7/include/linux/latencytop.h
 +/*
 + * latencytop.h: Infrastructure for displaying latency
 + *
-+ * (C) Copyright 2006 Intel Corporation
++ * (C) Copyright 2008 Intel Corporation
 + * Author: Arjan van de Ven <arjan@linux.intel.com>
 + *
 + */
@@ -120,7 +120,7 @@ Index: linux-2.6.24-rc7/kernel/latencytop.c
 +/*
 + * latencytop.c: Latency display infrastructure
 + *
-+ * (C) Copyright 2006 Intel Corporation
++ * (C) Copyright 2008 Intel Corporation
 + * Author: Arjan van de Ven <arjan@linux.intel.com>
 + *
 + * This program is free software; you can redistribute it and/or
