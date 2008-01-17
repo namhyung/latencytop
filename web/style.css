@@ -83,3 +83,38 @@ tr.odd {
 
 #search { float: right; margin: 20px 15px 0 10px; }
 #search input { font: 11px Arial, Helvetica, sans-serif; }
+
+.subsection {  
+        padding-left: 3px;  
+        padding-right: 3px;
+        background-color: #ffffff;
+        font-weight:bold;
+        font-size:11px;
+}
+
+.nav_box {
+  padding: 3px;
+  background-color: #ffffff;
+  border-bottom: solid #e0e0e0 1px;
+}
+
+.fake_nav_box {
+  font-size: 11px;
+  line-height: 15px;
+  color: #0860a8;   
+  padding: 3px;     
+  background-color: #ffffff;
+  border-bottom: solid #e0e0e0 1px;
+  border-top: solid #e0e0e0 1px;   
+}
+ 
+.nav_box_active {
+  padding: 3px;  
+  background-color: #f0f0f0;
+  border-bottom: solid #e0e0e0 1px;
+}
+
+a, a.visited {
+  color: #0860a8;  
+  text-decoration: none;
+}
