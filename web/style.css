@@ -77,9 +77,9 @@ tr.odd {
 }
 
 #header {
-	width: 1124; height: 128px;
+	width: 800; height: 128px;
 	text-align: left;
-	background: url(logo.png); }
+	background: url(stopwatch.png); }
 
 #search { float: right; margin: 20px 15px 0 10px; }
 #search input { font: 11px Arial, Helvetica, sans-serif; }
