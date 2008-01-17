@@ -3,7 +3,7 @@ include("topbar.php");
 ?>
 
 <table>
-<tr><td valign=top width=200>
+<tr><td valign=top width=190>
 <table>
 <tr><td class=subsection>GENERAL</td></tr>
 <tr><td class='nav_box_active'><a class='nav' href='/index.php?n=Info'>Info</a></td></tr>
@@ -15,9 +15,9 @@ include("topbar.php");
 <td>
 <h1>About LatencyTOP</h1>
 
-Skipping audio, slower servers, everyone knows the symptoms. But to know
-what's going on in the system, what's causing it, how to fix it... that's a
-hard question without good answers right now.
+Skipping audio, slower servers, everyone knows the symptoms of latency. But
+to know what's going on in the system, what's causing the lastency, how to
+fix it... that's a hard question without good answers right now.
 
 <br><br>
 

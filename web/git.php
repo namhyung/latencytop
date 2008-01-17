@@ -3,7 +3,7 @@ include("topbar.php");
 ?>
 
 <table>
-<tr><td valign=top width=200>
+<tr><td valign=top width=190>
 <table>
 <tr><td class=subsection>GENERAL</td></tr>
 <tr><td class='nav_box'><a class='nav' href='/index.php?n=Info'>Info</a></td></tr>
