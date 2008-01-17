@@ -29,7 +29,7 @@ the code can be changed to avoid the worst latency hiccups.
 <br>
 <h3>About latency</h3>
 
-There are many types and causes of latency; LatencyTOP focuses on the type
+There are many types and causes of latency. LatencyTOP focuses on the type
 of latency that causes skips in audio, stutters in your desktop experience
 or that overloads your server (while you have plenty of CPU power left).
 
