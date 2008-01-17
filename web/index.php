@@ -16,7 +16,7 @@ include("topbar.php");
 <h1>About LatencyTOP</h1>
 
 Skipping audio, slower servers, everyone knows the symptoms of latency. But
-to know what's going on in the system, what's causing the lastency, how to
+to know what's going on in the system, what's causing the latency, how to
 fix it... that's a hard question without good answers right now.
 
 <br><br>
@@ -24,7 +24,7 @@ fix it... that's a hard question without good answers right now.
 LatencyTOP is a Linux* tool for software developers (both kernel and
 userspace), aimed at identifying where in the system latency is happening,
 and what kind of operation/action is causing the latency to happen so that
-the code can be changed to avoid the worst latency hickups.
+the code can be changed to avoid the worst latency hiccups.
 
 <br>
 <h3>About latency</h3>
