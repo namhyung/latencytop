@@ -21,7 +21,7 @@ fix it... that's a hard question without good answers right now.
 
 <br><br>
 
-LatencyTOP is a Linux tool for software developers (both kernel and
+LatencyTOP is a Linux* tool for software developers (both kernel and
 userspace), aimed at identifying where in the system latency is happening,
 and what kind of operation/action is causing the latency to happen so that
 the code can be changed to avoid the worst latency hickups.
