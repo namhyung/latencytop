@@ -45,6 +45,8 @@ int total_count = 0;
 unsigned int pid_with_max = 0;
 unsigned int pidmax = 0;
 int firsttime = 1;
+int noui; 
+int dump_unknown;
 
 void parse_global_list(void)
 {
@@ -90,7 +92,7 @@ void parse_global_list(void)
 		c2 = strchr(c, '\n');
 		if (c2) *c2=0;
 		while (c[0]==' ') c++;
-		strcpy(line->reason, c);
+		strcpy(line->reason, translate(c));
 
 		lines = g_list_append(lines, line);
 		free(ln);
@@ -236,7 +238,7 @@ void parse_process(struct process *process)
 			if (c2) *c2=0;
 			if (*c==' ') c++;
 			if (*c=='\t') c++;
-			strcpy(ln->reason, c);
+			strcpy(ln->reason, translate(c));
 
 			if (ln->max > process->max)
 				process->max = ln->max;
@@ -411,6 +413,10 @@ int main(int argc, char **argv)
 		dump_global_to_console();
 		return EXIT_SUCCESS;
 	}
+	if (argc>1 && strcmp(argv[1],"--unknown")==0) {
+		noui = 1;
+		dump_unknown = 1;
+	}
 	initialize_curses();
 	while (1 + argc || argv==NULL) {
 		parse_processes();
@@ -422,6 +428,8 @@ int main(int argc, char **argv)
 		update_display(30);
 		delete_list();
 		firsttime = 0;
+		if (noui)
+			fprintf(stderr, ".");
 	}
 	return EXIT_SUCCESS;
 }

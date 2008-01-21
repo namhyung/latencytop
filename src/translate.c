@@ -37,7 +37,8 @@
 
 /* translate kernel output to human readable */
 struct translate_line {
-	char original[1024];
+	int priority;
+	char function[1024];
 	char display[1024];	
 };
 
@@ -47,36 +48,52 @@ GList *translations;
 char *translate(char *line)
 {
 	char buffer[4096], *c, *c2;
+	int prio = 0;
+	char *selected = line;
 	GList *item;
 	struct translate_line *trans;
 
 	memset(buffer, 0, 4096);	
 	strcpy(buffer, line);
-	c = strchr(buffer, '(');
-	if (c)
-		c = strchr(c, '+');
-	if (c)
-		*c=0;
-		
+
 	c2 = buffer;
 	while (c2[0] == ' ') c2++;
-	item = g_list_first(translations);
-	while (item) {
-		trans = item->data;
-		item = g_list_next(item);
-		if (strcmp(trans->original, c2)==0)
-			return trans->display;
+
+	while (c2 && strlen(c2) > 0) {
+
+		c = strchr(c2, ' ');
+		if (c) *c = 0;
+
+		item = g_list_first(translations);
+		while (item) {
+			trans = item->data;
+			item = g_list_next(item);
+			if (trans->priority >= prio && strcmp(trans->function, c2)==0) {
+				selected = trans->display;
+				prio = trans->priority;
+			}
+		}
+
+		if (c)
+			c2 = c+1;
+		else
+			c2 = NULL;
 	}
-	
-	c = strstr(line, "()");
-	if (c) { *c = ' '; *(c+1)= ' '; }
-	
-	return line;
+	if (dump_unknown && prio < 2) {
+		FILE *file;
+		file = fopen("latencytop.log", "w+");
+		if (file) {
+			fprintf(file, "%s\n", line);
+			fclose(file);
+		}
+		printf("Unknown: %s\n", line);
+	}
+	return selected;
 }
 
 void init_translations(char *filename)
 {
-	char *c1, *c2;
+	char *c, *c2;
 	FILE *file;
 	
 	file = fopen(filename, "r");
@@ -94,20 +111,26 @@ void init_translations(char *filename)
 			free(line);
 			continue;
 		}
-		c1 = strchr(line,'|');
-		if (!c1) {
-			free(line);
-			continue;
-		}
-		*c1=0;
-		c1++;
-		while (*c1==' ' || *c1=='\t') c1++;
-		c2=strchr(c1, '\n');
-		if (c2) *c2=0;
+
 		trans = malloc(sizeof(struct translate_line));
-		strcpy(trans->original, line);
-		strcpy(trans->display, c1);
-		
+		memset(trans, 0, sizeof(trans));
+
+		c2 = line;
+		c = strchr(c2, '\t');
+		if (c) {
+			*c = 0;
+			trans->priority = strtoull(c2, NULL, 10);
+			c2 = c+1;
+		}
+
+		c = strchr(c2, '\t');
+		if (c) {
+			*c = 0;
+			strcpy(trans->function, c2);
+			c2 = c+1;
+		}
+		while (*c2=='\t') c2++;
+		strcpy(trans->display, c2);
 		translations = g_list_append(translations, trans);
 		free(line);
 	}
