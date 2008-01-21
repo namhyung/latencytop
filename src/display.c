@@ -135,7 +135,7 @@ void print_global_list(void)
 	int i = 1;
 
 	mvwprintw(global_window, 0, 0, "Cause");
-	mvwprintw(global_window, 0, 50, "  Maximum          Average\n");
+	mvwprintw(global_window, 0, 50, "   Maximum     Percentage\n");
 	item = g_list_first(lines);
 	while (item && i < 10) {
 		line = item->data;
@@ -144,9 +144,9 @@ void print_global_list(void)
 		if (line->max*0.001 < 0.1) 
 			continue;
 		mvwprintw(global_window, i, 0, "%s", line->reason);
-		mvwprintw(global_window, i, 50, "%5.1f msec        %5.1f msec\n",
+		mvwprintw(global_window, i, 50, "%5.1f msec        %5.1f %%\n",
 				line->max * 0.001,
-				(line->time * 0.001 +0.0001) / line->count);
+				(line->time * 100 +0.0001) / total_time);
 		i++;
 	}
 	wrefresh(global_window);
@@ -257,6 +257,7 @@ void print_process(unsigned int pid)
 	struct process *proc;
 	GList *item;
 	werase(right_window);
+	double total = 0.0;
 
 	item = g_list_first(procs);
 	while (item) {
@@ -273,6 +274,13 @@ void print_process(unsigned int pid)
 		while (strlen(header) < maxx)
 			strcat(header, " ");
 		mvwprintw(right_window, 0, 0, "%s", header);
+		
+		item2 = g_list_first(proc->latencies);
+		while (item2 && i < 6) {
+			line = item2->data;
+			item2 = g_list_next(item2);
+			total = total + line->time;
+		}
 		wattroff(right_window, A_REVERSE);
 		item2 = g_list_first(proc->latencies);
 		while (item2 && i < 6) {
@@ -281,9 +289,9 @@ void print_process(unsigned int pid)
 			if (line->max*0.001 < 0.1)
 				continue;
 			mvwprintw(right_window, i+1, 0, "%s", line->reason);
-			mvwprintw(right_window, i+1, 50, "%5.1f msec        %5.1f msec",
+			mvwprintw(right_window, i+1, 50, "%5.1f msec        %5.1f %%",
 				line->max * 0.001,
-				(line->time * 0.001 +0.0001) / line->count
+				(line->time * 100 +0.0001) / total
 				);
 			i++;
 		}

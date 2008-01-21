@@ -161,7 +161,17 @@ gint comparef(gconstpointer A, gconstpointer B)
 
 void sort_list(void)
 {
+	GList *entry;
+	struct latency_line *line;
+
+	total_time = 0;
 	lines = g_list_sort(lines, comparef);
+	entry = g_list_first(lines);
+	while (entry) {
+		line = entry->data;
+		entry = g_list_next(entry);
+		total_time = total_time + line->time;
+	}
 }
 
 
