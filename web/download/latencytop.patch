@@ -1,0 +1,633 @@
+From: Arjan van de Ven <arjan@linux.intel.com>
+Subject: [PATCH] LatencyTOP infrastructure patch
+
+This patch is the core LatencyTOP kernel infrastructure;
+it measures latencies in the scheduler and tracks it system
+wide and per process.
+
+Signed-off-by: Ingo Molnar <mingo@elte.hu>
+Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
+
+---
+ arch/x86/kernel/stacktrace.c |   27 ++++
+ fs/proc/base.c               |   79 ++++++++++++++
+ include/linux/latencytop.h   |   44 +++++++
+ include/linux/sched.h        |    5 
+ include/linux/stacktrace.h   |    3 
+ kernel/Makefile              |    1 
+ kernel/fork.c                |    1 
+ kernel/latencytop.c          |  241 +++++++++++++++++++++++++++++++++++++++++++
+ kernel/sched_fair.c          |    8 +
+ kernel/sysctl.c              |   10 +
+ lib/Kconfig.debug            |   12 ++
+ 11 files changed, 430 insertions(+), 1 deletion(-)
+
+Index: linux-2.6.24-rc8/arch/x86/kernel/stacktrace.c
+===================================================================
+--- linux-2.6.24-rc8.orig/arch/x86/kernel/stacktrace.c
++++ linux-2.6.24-rc8/arch/x86/kernel/stacktrace.c
+@@ -33,6 +33,19 @@ static void save_stack_address(void *dat
+ 		trace->entries[trace->nr_entries++] = addr;
+ }
+ 
++static void save_stack_address_nosched(void *data, unsigned long addr)
++{
++	struct stack_trace *trace = (struct stack_trace *)data;
++	if (in_sched_functions(addr))
++		return;
++	if (trace->skip > 0) {
++		trace->skip--;
++		return;
++	}
++	if (trace->nr_entries < trace->max_entries)
++		trace->entries[trace->nr_entries++] = addr;
++}
++
+ static const struct stacktrace_ops save_stack_ops = {
+ 	.warning = save_stack_warning,
+ 	.warning_symbol = save_stack_warning_symbol,
+@@ -40,6 +53,13 @@ static const struct stacktrace_ops save_
+ 	.address = save_stack_address,
+ };
+ 
++static const struct stacktrace_ops save_stack_ops_nosched = {
++	.warning = save_stack_warning,
++	.warning_symbol = save_stack_warning_symbol,
++	.stack = save_stack_stack,
++	.address = save_stack_address_nosched,
++};
++
+ /*
+  * Save stack-backtrace addresses into a stack_trace buffer.
+  */
+@@ -50,3 +70,10 @@ void save_stack_trace(struct stack_trace
+ 		trace->entries[trace->nr_entries++] = ULONG_MAX;
+ }
+ EXPORT_SYMBOL(save_stack_trace);
++
++void save_stack_trace_tsk(struct task_struct *tsk, struct stack_trace *trace)
++{
++	dump_trace(tsk, NULL, NULL, &save_stack_ops_nosched, trace);
++	if (trace->nr_entries < trace->max_entries)
++		trace->entries[trace->nr_entries++] = ULONG_MAX;
++}
+Index: linux-2.6.24-rc8/fs/proc/base.c
+===================================================================
+--- linux-2.6.24-rc8.orig/fs/proc/base.c
++++ linux-2.6.24-rc8/fs/proc/base.c
+@@ -310,6 +310,79 @@ static int proc_pid_schedstat(struct tas
+ }
+ #endif
+ 
++#ifdef CONFIG_LATENCYTOP
++static int lstats_show_proc(struct seq_file *m, void *v)
++{
++	int i;
++	struct task_struct *task = m->private;
++	seq_puts(m, "Latency Top version : v0.1\n");
++
++	for (i = 0; i < 32; i++) {
++		if (task->latency_record[i].backtrace[0]) {
++			int q;
++			seq_printf(m, "%i %li %li ",
++				task->latency_record[i].count,
++				task->latency_record[i].time,
++				task->latency_record[i].max);
++			for (q = 0; q < LT_BACKTRACEDEPTH; q++) {
++				char sym[KSYM_NAME_LEN];
++				char *c;
++				if (!task->latency_record[i].backtrace[q])
++					break;
++				if (task->latency_record[i].backtrace[q]
++								== ULONG_MAX)
++					break;
++				sprint_symbol(sym,
++					task->latency_record[i].backtrace[q]);
++				c = strchr(sym, '+');
++				if (c)
++					*c = 0;
++				seq_printf(m, "%s ", sym);
++			}
++			seq_printf(m, "\n");
++		}
++
++	}
++	return 0;
++}
++
++static int lstats_open(struct inode *inode, struct file *file)
++{
++	int ret;
++	struct seq_file *m;
++	struct task_struct *task = get_proc_task(inode);
++
++	ret = single_open(file, lstats_show_proc, NULL);
++	if (!ret) {
++		m = file->private_data;
++		m->private = task;
++	}
++	return ret;
++}
++
++static ssize_t lstats_write(struct file *file, const char __user *buf,
++			    size_t count, loff_t *offs)
++{
++	struct seq_file *m;
++	struct task_struct *task;
++
++	m = file->private_data;
++	task = m->private;
++	clear_all_latency_tracing(task);
++
++	return count;
++}
++
++static const struct file_operations proc_lstats_operations = {
++	.open		= lstats_open,
++	.read		= seq_read,
++	.write		= lstats_write,
++	.llseek		= seq_lseek,
++	.release	= single_release,
++};
++
++#endif
++
+ /* The badness from the OOM killer */
+ unsigned long badness(struct task_struct *p, unsigned long uptime);
+ static int proc_oom_score(struct task_struct *task, char *buffer)
+@@ -2230,6 +2303,9 @@ static const struct pid_entry tgid_base_
+ #ifdef CONFIG_SCHEDSTATS
+ 	INF("schedstat",  S_IRUGO, pid_schedstat),
+ #endif
++#ifdef CONFIG_LATENCYTOP
++	REG("latency",  S_IRUGO, lstats),
++#endif
+ #ifdef CONFIG_PROC_PID_CPUSET
+ 	REG("cpuset",     S_IRUGO, cpuset),
+ #endif
+@@ -2555,6 +2631,9 @@ static const struct pid_entry tid_base_s
+ #ifdef CONFIG_SCHEDSTATS
+ 	INF("schedstat", S_IRUGO, pid_schedstat),
+ #endif
++#ifdef CONFIG_LATENCYTOP
++	REG("latency",  S_IRUGO, lstats),
++#endif
+ #ifdef CONFIG_PROC_PID_CPUSET
+ 	REG("cpuset",    S_IRUGO, cpuset),
+ #endif
+Index: linux-2.6.24-rc8/include/linux/latencytop.h
+===================================================================
+--- /dev/null
++++ linux-2.6.24-rc8/include/linux/latencytop.h
+@@ -0,0 +1,44 @@
++/*
++ * latencytop.h: Infrastructure for displaying latency
++ *
++ * (C) Copyright 2008 Intel Corporation
++ * Author: Arjan van de Ven <arjan@linux.intel.com>
++ *
++ */
++
++#ifndef _INCLUDE_GUARD_LATENCYTOP_H_
++#define _INCLUDE_GUARD_LATENCYTOP_H_
++
++#ifdef CONFIG_LATENCYTOP
++
++#define LT_SAVECOUNT		32
++#define LT_BACKTRACEDEPTH	12
++
++struct latency_record {
++	unsigned long	backtrace[LT_BACKTRACEDEPTH];
++	unsigned int	count;
++	unsigned long	time;
++	unsigned long	max;
++};
++
++
++struct task_struct;
++
++void account_scheduler_latency(struct task_struct *task, int usecs, int inter);
++
++void clear_all_latency_tracing(struct task_struct *p);
++
++#else
++
++static inline void
++account_scheduler_latency(struct task_struct *task, int usecs, int inter)
++{
++}
++
++static inline void clear_all_latency_tracing(struct task_struct *p)
++{
++}
++
++#endif
++
++#endif
+Index: linux-2.6.24-rc8/include/linux/sched.h
+===================================================================
+--- linux-2.6.24-rc8.orig/include/linux/sched.h
++++ linux-2.6.24-rc8/include/linux/sched.h
+@@ -88,6 +88,7 @@ struct sched_param {
+ #include <linux/hrtimer.h>
+ #include <linux/task_io_accounting.h>
+ #include <linux/kobject.h>
++#include <linux/latencytop.h>
+ 
+ #include <asm/processor.h>
+ 
+@@ -1178,6 +1179,10 @@ struct task_struct {
+ 	int make_it_fail;
+ #endif
+ 	struct prop_local_single dirties;
++#ifdef CONFIG_LATENCYTOP
++	int latency_record_count;
++	struct latency_record latency_record[LT_SAVECOUNT];
++#endif
+ };
+ 
+ /*
+Index: linux-2.6.24-rc8/include/linux/stacktrace.h
+===================================================================
+--- linux-2.6.24-rc8.orig/include/linux/stacktrace.h
++++ linux-2.6.24-rc8/include/linux/stacktrace.h
+@@ -9,10 +9,13 @@ struct stack_trace {
+ };
+ 
+ extern void save_stack_trace(struct stack_trace *trace);
++extern void save_stack_trace_tsk(struct task_struct *tsk,
++				struct stack_trace *trace);
+ 
+ extern void print_stack_trace(struct stack_trace *trace, int spaces);
+ #else
+ # define save_stack_trace(trace)			do { } while (0)
++# define save_stack_trace_tsk(tsk, trace)		do { } while (0)
+ # define print_stack_trace(trace, spaces)		do { } while (0)
+ #endif
+ 
+Index: linux-2.6.24-rc8/kernel/Makefile
+===================================================================
+--- linux-2.6.24-rc8.orig/kernel/Makefile
++++ linux-2.6.24-rc8/kernel/Makefile
+@@ -57,6 +57,7 @@ obj-$(CONFIG_SYSCTL) += utsname_sysctl.o
+ obj-$(CONFIG_TASK_DELAY_ACCT) += delayacct.o
+ obj-$(CONFIG_TASKSTATS) += taskstats.o tsacct.o
+ obj-$(CONFIG_MARKERS) += marker.o
++obj-$(CONFIG_LATENCYTOP) += latencytop.o
+ 
+ ifneq ($(CONFIG_SCHED_NO_NO_OMIT_FRAME_POINTER),y)
+ # According to Alan Modra <alan@linuxcare.com.au>, the -fno-omit-frame-pointer is
+Index: linux-2.6.24-rc8/kernel/fork.c
+===================================================================
+--- linux-2.6.24-rc8.orig/kernel/fork.c
++++ linux-2.6.24-rc8/kernel/fork.c
+@@ -1196,6 +1196,7 @@ static struct task_struct *copy_process(
+ #ifdef TIF_SYSCALL_EMU
+ 	clear_tsk_thread_flag(p, TIF_SYSCALL_EMU);
+ #endif
++	clear_all_latency_tracing(p);
+ 
+ 	/* Our parent execution domain becomes current domain
+ 	   These must match for thread signalling to apply */
+Index: linux-2.6.24-rc8/kernel/latencytop.c
+===================================================================
+--- /dev/null
++++ linux-2.6.24-rc8/kernel/latencytop.c
+@@ -0,0 +1,241 @@
++/*
++ * latencytop.c: Latency display infrastructure
++ *
++ * (C) Copyright 2008 Intel Corporation
++ * Author: Arjan van de Ven <arjan@linux.intel.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; version 2
++ * of the License.
++ */
++#include <linux/latencytop.h>
++#include <linux/kallsyms.h>
++#include <linux/seq_file.h>
++#include <linux/notifier.h>
++#include <linux/spinlock.h>
++#include <linux/proc_fs.h>
++#include <linux/module.h>
++#include <linux/sched.h>
++#include <linux/list.h>
++#include <linux/slab.h>
++#include <linux/stacktrace.h>
++
++static DEFINE_SPINLOCK(latency_lock);
++
++#define MAXLR 128
++static struct latency_record latency_record[MAXLR];
++
++int latencytop_enabled;
++
++void clear_all_latency_tracing(struct task_struct *p)
++{
++	unsigned long flags;
++
++	if (!latencytop_enabled)
++		return;
++
++	spin_lock_irqsave(&latency_lock, flags);
++	memset(&p->latency_record, 0, sizeof(p->latency_record));
++	p->latency_record_count = 0;
++	spin_unlock_irqrestore(&latency_lock, flags);
++}
++
++static void clear_global_latency_tracing(void)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(&latency_lock, flags);
++	memset(&latency_record, 0, sizeof(latency_record));
++	spin_unlock_irqrestore(&latency_lock, flags);
++}
++
++static void __sched account_global_scheduler_latency(struct task_struct *tsk,
++						struct latency_record *lat)
++{
++	int firstnonnull = MAXLR + 1;
++	int i;
++
++	if (!latencytop_enabled)
++		return;
++
++	/* skip kernel threads for now */
++	if (!tsk->mm)
++		return;
++
++	for (i = 0; i < MAXLR; i++) {
++		int q;
++		int same = 1;
++		/* Nothing stored: */
++		if (!latency_record[i].backtrace[0]) {
++			if (firstnonnull > i)
++				firstnonnull = i;
++			continue;
++		}
++		for (q = 0 ; q < LT_BACKTRACEDEPTH ; q++) {
++			if (latency_record[i].backtrace[q] !=
++				lat->backtrace[q])
++				same = 0;
++			if (same && lat->backtrace[q] == 0)
++				break;
++			if (same && lat->backtrace[q] == ULONG_MAX)
++				break;
++		}
++		if (same) {
++			latency_record[i].count++;
++			latency_record[i].time += lat->time;
++			if (lat->time > latency_record[i].max)
++				latency_record[i].max = lat->time;
++			return;
++		}
++	}
++
++	i = firstnonnull;
++	if (i >= MAXLR - 1)
++		return;
++
++	/* Allocted a new one: */
++	memcpy(&latency_record[i], lat, sizeof(struct latency_record));
++}
++
++static inline void
++store_stacktrace(struct task_struct *tsk, struct latency_record *lat)
++{
++	struct stack_trace trace;
++
++	memset(&trace, 0, sizeof(trace));
++	trace.max_entries = LT_BACKTRACEDEPTH;
++	trace.entries = &lat->backtrace[0];
++	trace.skip = 0;
++	save_stack_trace_tsk(tsk, &trace);
++}
++
++void __sched
++account_scheduler_latency(struct task_struct *tsk, int usecs, int inter)
++{
++	unsigned long flags;
++	int i, q;
++	struct latency_record lat;
++
++	if (!latencytop_enabled)
++		return;
++
++	/* Long interruptible waits are generally user requested... */
++	if (inter && usecs > 5000)
++		return;
++
++	memset(&lat, 0, sizeof(lat));
++	lat.count = 1;
++	lat.time = usecs;
++	lat.max = usecs;
++	store_stacktrace(tsk, &lat);
++
++	spin_lock_irqsave(&latency_lock, flags);
++
++	account_global_scheduler_latency(tsk, &lat);
++
++	/*
++	 * short term hack; if we're > 32 we stop; future we recycle:
++	 */
++	tsk->latency_record_count++;
++	if (tsk->latency_record_count >= LT_SAVECOUNT)
++		goto out_unlock;
++
++	for (i = 0; i < LT_SAVECOUNT ; i++) {
++		struct latency_record *mylat;
++		int same = 1;
++		mylat = &tsk->latency_record[i];
++		for (q = 0 ; q < LT_BACKTRACEDEPTH ; q++) {
++			if (mylat->backtrace[q] !=
++				lat.backtrace[q])
++				same = 0;
++			if (same && lat.backtrace[q] == 0)
++				break;
++			if (same && lat.backtrace[q] == ULONG_MAX)
++				break;
++		}
++		if (same) {
++			mylat->count++;
++			mylat->time += lat.time;
++			if (lat.time > mylat->max)
++				mylat->max = lat.time;
++			goto out_unlock;
++		}
++	}
++
++	/* Allocated a new one: */
++	i = tsk->latency_record_count;
++	memcpy(&tsk->latency_record[i], &lat, sizeof(struct latency_record));
++
++out_unlock:
++	spin_unlock_irqrestore(&latency_lock, flags);
++}
++
++static int lstats_show(struct seq_file *m, void *v)
++{
++	int i;
++
++	seq_puts(m, "Latency Top version : v0.1\n");
++
++	for (i = 0; i < MAXLR; i++) {
++		if (latency_record[i].backtrace[0]) {
++			int q;
++			seq_printf(m, "%i %li %li ",
++				latency_record[i].count,
++				latency_record[i].time,
++				latency_record[i].max);
++			for (q = 0; q < LT_BACKTRACEDEPTH; q++) {
++				char sym[KSYM_NAME_LEN];
++				char *c;
++				if (!latency_record[i].backtrace[q])
++					break;
++				if (latency_record[i].backtrace[q] == ULONG_MAX)
++					break;
++				sprint_symbol(sym,
++						latency_record[i].backtrace[q]);
++				c = strchr(sym, '+');
++				if (c)
++					*c = 0;
++				seq_printf(m, "%s ", sym);
++			}
++			seq_printf(m, "\n");
++		}
++	}
++	return 0;
++}
++
++static ssize_t
++lstats_write(struct file *file, const char __user *buf, size_t count,
++	     loff_t *offs)
++{
++	clear_global_latency_tracing();
++
++	return count;
++}
++
++static int lstats_open(struct inode *inode, struct file *filp)
++{
++	return single_open(filp, lstats_show, NULL);
++}
++
++static struct file_operations lstats_fops = {
++	.open		= lstats_open,
++	.read		= seq_read,
++	.write		= lstats_write,
++	.llseek		= seq_lseek,
++	.release	= single_release,
++};
++
++static int __init init_lstats_procfs(void)
++{
++	struct proc_dir_entry *pe;
++
++	pe = create_proc_entry("latency_stats", 0644, NULL);
++	if (!pe)
++		return -ENOMEM;
++
++	pe->proc_fops = &lstats_fops;
++
++	return 0;
++}
++__initcall(init_lstats_procfs);
+Index: linux-2.6.24-rc8/kernel/sched_fair.c
+===================================================================
+--- linux-2.6.24-rc8.orig/kernel/sched_fair.c
++++ linux-2.6.24-rc8/kernel/sched_fair.c
+@@ -20,6 +20,8 @@
+  *  Copyright (C) 2007 Red Hat, Inc., Peter Zijlstra <pzijlstr@redhat.com>
+  */
+ 
++#include <linux/latencytop.h>
++
+ /*
+  * Targeted preemption latency for CPU-bound tasks:
+  * (default: 20ms * (1 + ilog(ncpus)), units: nanoseconds)
+@@ -434,6 +436,7 @@ static void enqueue_sleeper(struct cfs_r
+ #ifdef CONFIG_SCHEDSTATS
+ 	if (se->sleep_start) {
+ 		u64 delta = rq_of(cfs_rq)->clock - se->sleep_start;
++		struct task_struct *tsk = task_of(se);
+ 
+ 		if ((s64)delta < 0)
+ 			delta = 0;
+@@ -443,9 +446,12 @@ static void enqueue_sleeper(struct cfs_r
+ 
+ 		se->sleep_start = 0;
+ 		se->sum_sleep_runtime += delta;
++
++		account_scheduler_latency(tsk, delta >> 10, 1);
+ 	}
+ 	if (se->block_start) {
+ 		u64 delta = rq_of(cfs_rq)->clock - se->block_start;
++		struct task_struct *tsk = task_of(se);
+ 
+ 		if ((s64)delta < 0)
+ 			delta = 0;
+@@ -462,11 +468,11 @@ static void enqueue_sleeper(struct cfs_r
+ 		 * time that the task spent sleeping:
+ 		 */
+ 		if (unlikely(prof_on == SLEEP_PROFILING)) {
+-			struct task_struct *tsk = task_of(se);
+ 
+ 			profile_hits(SLEEP_PROFILING, (void *)get_wchan(tsk),
+ 				     delta >> 20);
+ 		}
++		account_scheduler_latency(tsk, delta >> 10, 0);
+ 	}
+ #endif
+ }
+Index: linux-2.6.24-rc8/kernel/sysctl.c
+===================================================================
+--- linux-2.6.24-rc8.orig/kernel/sysctl.c
++++ linux-2.6.24-rc8/kernel/sysctl.c
+@@ -81,6 +81,7 @@ extern int compat_log;
+ extern int maps_protect;
+ extern int sysctl_stat_interval;
+ extern int audit_argv_kb;
++extern int latencytop_enabled;
+ 
+ /* Constants used for minimum and  maximum */
+ #ifdef CONFIG_DETECT_SOFTLOCKUP
+@@ -382,6 +383,15 @@ static struct ctl_table kern_table[] = {
+ 		.proc_handler	= &proc_dointvec_taint,
+ 	},
+ #endif
++#ifdef CONFIG_LATENCYTOP
++	{
++		.procname	= "latencytop",
++		.data		= &latencytop_enabled,
++		.maxlen		= sizeof(int),
++		.mode		= 0644,
++		.proc_handler	= &proc_dointvec,
++	},
++#endif
+ #ifdef CONFIG_SECURITY_CAPABILITIES
+ 	{
+ 		.procname	= "cap-bound",
+Index: linux-2.6.24-rc8/lib/Kconfig.debug
+===================================================================
+--- linux-2.6.24-rc8.orig/lib/Kconfig.debug
++++ linux-2.6.24-rc8/lib/Kconfig.debug
+@@ -517,4 +517,16 @@ config FAULT_INJECTION_STACKTRACE_FILTER
+ 	help
+ 	  Provide stacktrace filter for fault-injection capabilities
+ 
++config LATENCYTOP
++	bool "Latency measuring infrastructure"
++	select FRAME_POINTER if !MIPS
++	select KALLSYMS
++	select KALLSYMS_ALL
++	select STACKTRACE
++	depends on SCHEDSTATS
++	help
++	  Enable this option if you want to use the LatencyTOP tool
++	  to find out which userspace is blocking on what kernel operations.
++
++
+ source "samples/Kconfig"
