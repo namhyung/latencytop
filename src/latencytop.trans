@@ -28,6 +28,9 @@
 2	blkdev_ioctl		block device IOCTL
 2	kauditd_thread		kernel audit daemon
 2	tty_ioctl		TTY IOCTL
+2	__filemap_fdatawrite_range fdatasync system call
+2	do_sync_write		synchronous write
+2	kthreadd		kthreadd kernel thread
 #
 3	tty_wait_until_sent	Waiting for TTY to finish sending
 3	pipe_read		Reading from a pipe
@@ -38,6 +41,7 @@
 3	sys_wait4		Waiting for a process to die
 3	sr_media_change		Checking for media change
 3	sr_do_ioctl		SCSI cdrom ioctl
+3	sd_ioctl		SCSI disk ioctl
 3	sr_cd_check		Checking CDROM media present
 3	ext3_read_inode		Reading EXT3 inode
 3	htree_dirblock_to_tree	Reading EXT3 directory htree
@@ -77,7 +81,7 @@
 3	acquire_console_sem	Waiting for console access
 3	filp_close		Closing a file
 3	sync_inode		(f)syncing an inode to disk
-3	ata_exec_internal_sg	Executing internal ATAS command
+3	ata_exec_internal_sg	Executing internal ATA command
 3	writeback_inodes	Writing back inodes
 3	ext3_orphan_add 	EXT3 adding orphan
 3	ext3_mark_inode_dirty 	EXT3 marking inode dirty
@@ -106,6 +110,8 @@
 3	sys_epoll_wait		Waiting for event (epoll)
 3	sync_sb_inodes		Syncing inodes
 3	tcp_connect		TCP/IP connect
+3	ata_scsi_ioctl		ATA/SCSI disk ioctl
+#
 #
 5	do_page_fault		Page fault
 5	handle_mm_fault		Page fault
