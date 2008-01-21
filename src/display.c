@@ -45,6 +45,7 @@ static WINDOW *right_window;
 
 static GList *cursor_e = NULL;
 
+
 void cleanup_curses(void) 
 {
 	endwin();
@@ -317,7 +318,7 @@ int done_yet(int time, struct timeval *p1)
 
 
 
-void update_display(int duration)
+int update_display(int duration)
 {
 	struct timeval start,end,now;
 	int key;
@@ -328,7 +329,7 @@ void update_display(int duration)
 		if (duration > 5)
 			duration = 5;
 		sleep(duration);
-		return;
+		return 1;
 	}
 	gettimeofday(&start, NULL);
 	setup_windows();
@@ -365,14 +366,15 @@ void update_display(int duration)
 			if (keychar == 'X' || keychar == 'B' || keychar == 'C') 
 				pid_with_max = one_pid_forward(pid_with_max);
 			if (keychar == 'Q') 
-				exit(EXIT_SUCCESS);
+				return 0;
 			if (keychar == 'R') {
 				cursor_e = NULL;
-				return;
+				return 1;
 			}
 			if (keychar < 32)
 				repaint = 0;
 		}
 	}
 	cursor_e = NULL;
+	return 1;
 }

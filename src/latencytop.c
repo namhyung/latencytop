@@ -482,6 +482,7 @@ static void enable_sysctl(void)
 
 int main(int argc, char **argv)
 {
+	int ret = 1;
 	enable_sysctl();
 	init_translations("latencytop.trans");
 	if (argc>1 && strcmp(argv[1],"-d")==0) {
@@ -495,18 +496,21 @@ int main(int argc, char **argv)
 		dump_unknown = 1;
 	}
 	initialize_curses();
-	while (1 + argc || argv==NULL) {
+	while (ret) {
 		parse_processes();
 		prune_unused_procs();
 		parse_global_list();
 		sort_list();
 		if (!total_time)
 			total_time = 1;
-		update_display(30);
+		ret = update_display(30);
 		delete_list();
 		firsttime = 0;
 		if (noui)
 			fprintf(stderr, ".");
 	}
+	prune_unused_procs();
+	delete_list();
+	cleanup_curses();
 	return EXIT_SUCCESS;
 }

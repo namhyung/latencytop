@@ -38,8 +38,8 @@
 /* translate kernel output to human readable */
 struct translate_line {
 	int priority;
-	char function[1024];
-	char display[1024];	
+	char function[200];
+	char display[200];	
 };
 
 

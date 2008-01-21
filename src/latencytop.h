@@ -32,7 +32,7 @@ extern int noui;
 extern int dump_unknown;
 
 
-extern void update_display(int duration);
+extern int update_display(int duration);
 
 
 #define PT_COLOR_DEFAULT    1

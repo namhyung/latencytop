@@ -118,6 +118,7 @@
 3	vfs_rmdir		Removing directory
 3	sys_flock		flock() on a file
 3	usbdev_open		opening USB device
+3	lock_kernel		Big Kernel Lock contention
 #
 #
 5	do_page_fault		Page fault
