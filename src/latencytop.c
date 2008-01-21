@@ -446,9 +446,19 @@ void dump_global_to_console(void)
 
 }
 
+static void enable_sysctl(void)
+{
+	FILE *file;
+	file = fopen("/proc/sys/kernel/latencytop", "w");
+	if (!file)
+		return;
+	fprintf(file, "1");
+	fclose(file);
+}
 
 int main(int argc, char **argv)
 {
+	enable_sysctl();
 	init_translations("latencytop.trans");
 	if (argc>1 && strcmp(argv[1],"-d")==0) {
 		parse_global_list();
