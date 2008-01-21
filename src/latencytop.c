@@ -48,6 +48,46 @@ int firsttime = 1;
 int noui; 
 int dump_unknown;
 
+static void add_to_global(struct latency_line *line)
+{
+	GList *item;
+	struct latency_line *line2;
+	item = g_list_first(lines);
+	while (item) {
+		line2 = item->data;
+		item = g_list_next(item);
+		if (strcmp(line->reason, line2->reason)==0) {
+			line2->count += line->count;
+			line2->time += line->time;
+			if (line->max > line2->max)
+				line2->max = line->max;
+			free(line);
+			return;
+		}
+	}
+	lines = g_list_append(lines, line);
+}
+
+static void add_to_process(struct process *process, struct latency_line *line)
+{
+	GList *item;
+	struct latency_line *line2;
+	item = g_list_first(process->latencies);
+	while (item) {
+		line2 = item->data;
+		item = g_list_next(item);
+		if (strcmp(line->reason, line2->reason)==0) {
+			line2->count += line->count;
+			line2->time += line->time;
+			if (line->max > line2->max)
+				line2->max = line->max;
+			free(line);
+			return;
+		}
+	}
+	process->latencies = g_list_append(process->latencies, line);
+}
+
 void parse_global_list(void)
 {
 	FILE *file;
@@ -94,7 +134,7 @@ void parse_global_list(void)
 		while (c[0]==' ') c++;
 		strcpy(line->reason, translate(c));
 
-		lines = g_list_append(lines, line);
+		add_to_global(line);
 		free(ln);
 		ln = NULL;
 	}
@@ -242,7 +282,7 @@ void parse_process(struct process *process)
 
 			if (ln->max > process->max)
 				process->max = ln->max;
-			process->latencies = g_list_append(process->latencies, ln);
+			add_to_process(process, ln);
 			process->used = 1;
 			free(line);
 			line = NULL;
@@ -264,7 +304,7 @@ void parse_process(struct process *process)
 		strcpy(ln->reason, "Scheduler: waiting for cpu");
 		if (ln->max > process->max)
 			process->max = ln->max;
-		process->latencies = g_list_append(process->latencies, ln);
+		add_to_process(process, ln);
 		process->used = 1;
 	}
 	closedir(dir);
