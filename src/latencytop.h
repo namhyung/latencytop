@@ -25,6 +25,8 @@ extern int total_count;
 
 extern unsigned int pid_with_max;
 extern unsigned int pidmax;
+extern int noui;
+extern int dump_unknown;
 
 
 extern void update_display(int duration);

@@ -93,6 +93,8 @@ void setup_windows(void)
 
 void initialize_curses(void) 
 {
+	if (noui)
+		return;
 	initscr();
 	start_color();
 	keypad(stdscr, TRUE);	/* enable keyboard mapping */
@@ -141,7 +143,7 @@ void print_global_list(void)
 		
 		if (line->max*0.001 < 0.1) 
 			continue;
-		mvwprintw(global_window, i, 0, "%s", translate(line->reason));
+		mvwprintw(global_window, i, 0, "%s", line->reason);
 		mvwprintw(global_window, i, 50, "%5.1f msec        %5.1f msec\n",
 				line->max * 0.001,
 				(line->time * 0.001 +0.0001) / line->count);
@@ -278,7 +280,7 @@ void print_process(unsigned int pid)
 			item2 = g_list_next(item2);
 			if (line->max*0.001 < 0.1)
 				continue;
-			mvwprintw(right_window, i+1, 0, "%s", translate(line->reason));
+			mvwprintw(right_window, i+1, 0, "%s", line->reason);
 			mvwprintw(right_window, i+1, 50, "%5.1f msec        %5.1f msec",
 				line->max * 0.001,
 				(line->time * 0.001 +0.0001) / line->count
@@ -313,6 +315,13 @@ void update_display(int duration)
 	int key;
 	int repaint = 1;
 	fd_set rfds;
+
+	if (noui) {
+		if (duration > 5)
+			duration = 5;
+		sleep(duration);
+		return;
+	}
 	gettimeofday(&start, NULL);
 	setup_windows();
 	show_title_bar();
