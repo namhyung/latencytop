@@ -15,7 +15,10 @@ struct process {
 	GList *latencies;
 	int used;
 	int exists;
+	/* scheduler stats */
         double maxdelay;
+        double totaldelay;
+        int delaycount;
 };
 
 extern GList *lines;

@@ -302,16 +302,22 @@ void parse_process(struct process *process)
 		fclose(file);
 	}
 	/* 100 usec minimum */
-	if (process->maxdelay > 0.1 && !firsttime) {
+	if (!firsttime) {
 		struct latency_line *ln, *ln2;
 			
 		ln = malloc(sizeof(struct latency_line));
 		ln2 = malloc(sizeof(struct latency_line));
 		memset(ln, 0, sizeof(struct latency_line));
-		ln->count = 1;
-
-		ln->time = process->maxdelay * 1000;    
-		ln->max = ln->time;
+		
+		if (process->delaycount)
+			ln->count = process->delaycount;
+		else
+			ln->count = 1;
+		if (process->totaldelay > 0.00001)
+			ln->time = process->totaldelay * 1000;
+		else
+			ln->time = process->maxdelay * 1000;    
+		ln->max = process->maxdelay * 1000;    
 		strcpy(ln->reason, "Scheduler: waiting for cpu");
 		if (ln->max > process->max)
 			process->max = ln->max;
@@ -400,6 +406,14 @@ void parse_processes(void)
 				if (strstr(line, "se.wait_max") && q) {
 					sscanf(q+1,"%lf", &d);
 					process->maxdelay = d;
+				}
+				if (strstr(line, "se.wait_sum") && q) {
+					sscanf(q+1,"%lf", &d);
+					process->totaldelay = d;
+				}
+				if (strstr(line, "se.wait_count") && q) {
+					sscanf(q+1,"%lf", &d);
+					process->delaycount = d;
 				}
 				free(line);
 				line = NULL;
