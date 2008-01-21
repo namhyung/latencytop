@@ -105,6 +105,7 @@
 3	cdrom_open		opening cdrom device
 3	sys_epoll_wait		Waiting for event (epoll)
 3	sync_sb_inodes		Syncing inodes
+3	tcp_connect		TCP/IP connect
 #
 5	do_page_fault		Page fault
 5	handle_mm_fault		Page fault
