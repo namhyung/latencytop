@@ -57,6 +57,7 @@
 3	lookup_create		Creating file
 3	d_alloc			Creating file
 3	inet_sendmsg		Sending TCP/IP data
+3	tcp_recvmsg		Receiving TCP/IP data
 3	link_path_walk		Following symlink
 3	path_walk		Walking directory tree
 3	sys_getdents		Reading directory content
@@ -107,3 +108,4 @@
 5	sys_pause		Application requested delay
 5	evdev_read		Reading keyboard/mouse input
 5	do_fsync		fsync() on a file
+5	__log_wait_for_space	Waiting for EXT3 journal space
