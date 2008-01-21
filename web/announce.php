@@ -7,9 +7,9 @@ include("topbar.php");
 <table>
 <tr><td class=subsection>GENERAL</td></tr>
 <tr><td class='nav_box'><a class='nav' href='/index.php?n=Info'>Info</a></td></tr>
-<tr><td class='nav_box'><a class='nav' href='announce.php'>Announcement</a></td></tr> 
+<tr><td class='nav_box_active'><a class='nav' href='announce.php'>Announcement</a></td></tr> 
 <tr><td class='nav_box'><a class='nav' href='download.php'>Download</a></td></tr> 
-<tr><td class='nav_box_active'><a class='nav' href='git.php'>GIT Repository</a></td></tr> 
+<tr><td class='nav_box'><a class='nav' href='git.php'>GIT Repository</a></td></tr> 
 </table>
 </td>
 <td>
@@ -98,7 +98,7 @@ operations for tracking of latency. The idea for an annotation is that the
 kernel keeps track of what high level operation it is doing, which is 
 subsequently used from the low level scheduler code to account the actual 
 observed latency to. The good news is that the number of annotations needed 
-is limited; for one, all low level functions that sleep directly don't need 
+is limited;x for one, all low level functions that sleep directly don't need 
 annotation (this gets dealt with automatically), and there's only a finite 
 number of higher level operations that are relevant .
 
