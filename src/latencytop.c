@@ -480,6 +480,16 @@ static void enable_sysctl(void)
 	fclose(file);
 }
 
+static void disable_sysctl(void)
+{
+	FILE *file;
+	file = fopen("/proc/sys/kernel/latencytop", "w");
+	if (!file)
+		return;
+	fprintf(file, "0");
+	fclose(file);
+}
+
 int main(int argc, char **argv)
 {
 	int ret = 1;
@@ -512,5 +522,6 @@ int main(int argc, char **argv)
 	prune_unused_procs();
 	delete_list();
 	cleanup_curses();
+	disable_sysctl();
 	return EXIT_SUCCESS;
 }
