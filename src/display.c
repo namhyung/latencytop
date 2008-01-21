@@ -121,7 +121,7 @@ void show_title_bar(void)
 	wbkgd(title_bar_window, COLOR_PAIR(PT_COLOR_HEADER_BAR));   
 	werase(title_bar_window);
 
-	mvwprintw(title_bar_window, 0, 0,  "   LatencyTOP version 0.1       (C) 2008 Intel Corporation");
+	mvwprintw(title_bar_window, 0, 0,  "   LatencyTOP version 0.3       (C) 2008 Intel Corporation");
 
 	wrefresh(title_bar_window);
 }

@@ -26,6 +26,7 @@
 2	pdflush			pdflush() kernel thread
 2	kjournald		kjournald() kernel thread
 2	blkdev_ioctl		block device IOCTL
+2	kauditd_thread		kernel audit daemon
 #
 3	tty_wait_until_sent	Waiting for TTY to finish sending
 3	pipe_read		Reading from a pipe
@@ -55,7 +56,6 @@
 3	do_fork			Fork() system call
 3	sys_mkdirat		Creating directory
 3	lookup_create		Creating file
-3	d_alloc			Creating file
 3	inet_sendmsg		Sending TCP/IP data
 3	tcp_recvmsg		Receiving TCP/IP data
 3	link_path_walk		Following symlink
