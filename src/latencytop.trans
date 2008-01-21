@@ -99,6 +99,9 @@
 3	__d_lookup		Looking up a dentry
 3	blkdev_direct_IO	Direct block device IO
 3	sys_mprotect		mprotect() system call
+3	shrink_icache_memory	reducing inode cache memory footprint
+3	vfs_stat_fd		stat() operation
+3	cdrom_open		opening cdrom device
 #
 5	do_page_fault		Page fault
 5	handle_mm_fault		Page fault

@@ -293,9 +293,10 @@ void parse_process(struct process *process)
 	}
 	/* 100 usec minimum */
 	if (process->maxdelay > 0.1 && !firsttime) {
-		struct latency_line *ln;
+		struct latency_line *ln, *ln2;
 			
 		ln = malloc(sizeof(struct latency_line));
+		ln2 = malloc(sizeof(struct latency_line));
 		memset(ln, 0, sizeof(struct latency_line));
 		ln->count = 1;
 
@@ -304,7 +305,9 @@ void parse_process(struct process *process)
 		strcpy(ln->reason, "Scheduler: waiting for cpu");
 		if (ln->max > process->max)
 			process->max = ln->max;
+		memcpy(ln2, ln, sizeof(struct latency_line));
 		add_to_process(process, ln);
+		add_to_global(ln2);
 		process->used = 1;
 	}
 	closedir(dir);
