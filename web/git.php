@@ -6,7 +6,7 @@ include("topbar.php");
 <tr><td valign=top width=190>
 <table>
 <tr><td class=subsection>GENERAL</td></tr>
-<tr><td class='nav_box'><a class='nav' href='/index.php?n=Info'>Info</a></td></tr>
+<tr><td class='nav_box'><a class='nav' href='/index.php'>Info</a></td></tr>
 <tr><td class='nav_box'><a class='nav' href='announce.php'>Announcement</a></td></tr> 
 <tr><td class='nav_box'><a class='nav' href='download.php'>Download</a></td></tr> 
 <tr><td class='nav_box_active'><a class='nav' href='git.php'>GIT Repository</a></td></tr> 
