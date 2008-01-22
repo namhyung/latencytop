@@ -33,6 +33,8 @@
 2	kthreadd		kthreadd kernel thread
 2	usb_port_resume		Waking up USB device
 2	usb_autoresume_device	Waking up USB device
+2	kswapd			kswapd() kernel thread
+2	md_thread		Raid resync kernel thread
 #
 3	tty_wait_until_sent	Waiting for TTY to finish sending
 3	pipe_read		Reading from a pipe
@@ -119,6 +121,8 @@
 3	sys_flock		flock() on a file
 3	usbdev_open		opening USB device
 3	lock_kernel		Big Kernel Lock contention
+3	blk_execute_rq		Submitting block IO
+3	scsi_cmd_ioctl		SCSI ioctl command
 #
 #
 5	do_page_fault		Page fault
