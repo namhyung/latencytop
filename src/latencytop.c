@@ -161,7 +161,17 @@ gint comparef(gconstpointer A, gconstpointer B)
 
 void sort_list(void)
 {
+	GList *entry;
+	struct latency_line *line;
+
+	total_time = 0;
 	lines = g_list_sort(lines, comparef);
+	entry = g_list_first(lines);
+	while (entry) {
+		line = entry->data;
+		entry = g_list_next(entry);
+		total_time = total_time + line->time;
+	}
 }
 
 
@@ -292,19 +302,28 @@ void parse_process(struct process *process)
 		fclose(file);
 	}
 	/* 100 usec minimum */
-	if (process->maxdelay > 0.1 && !firsttime) {
-		struct latency_line *ln;
+	if (!firsttime) {
+		struct latency_line *ln, *ln2;
 			
 		ln = malloc(sizeof(struct latency_line));
+		ln2 = malloc(sizeof(struct latency_line));
 		memset(ln, 0, sizeof(struct latency_line));
-		ln->count = 1;
-
-		ln->time = process->maxdelay * 1000;    
-		ln->max = ln->time;
+		
+		if (process->delaycount)
+			ln->count = process->delaycount;
+		else
+			ln->count = 1;
+		if (process->totaldelay > 0.00001)
+			ln->time = process->totaldelay * 1000;
+		else
+			ln->time = process->maxdelay * 1000;    
+		ln->max = process->maxdelay * 1000;    
 		strcpy(ln->reason, "Scheduler: waiting for cpu");
 		if (ln->max > process->max)
 			process->max = ln->max;
+		memcpy(ln2, ln, sizeof(struct latency_line));
 		add_to_process(process, ln);
+		add_to_global(ln2);
 		process->used = 1;
 	}
 	closedir(dir);
@@ -388,6 +407,14 @@ void parse_processes(void)
 					sscanf(q+1,"%lf", &d);
 					process->maxdelay = d;
 				}
+				if (strstr(line, "se.wait_sum") && q) {
+					sscanf(q+1,"%lf", &d);
+					process->totaldelay = d;
+				}
+				if (strstr(line, "se.wait_count") && q) {
+					sscanf(q+1,"%lf", &d);
+					process->delaycount = d;
+				}
 				free(line);
 				line = NULL;
 			}
@@ -443,11 +470,32 @@ void dump_global_to_console(void)
 
 }
 
+static void enable_sysctl(void)
+{
+	FILE *file;
+	file = fopen("/proc/sys/kernel/latencytop", "w");
+	if (!file)
+		return;
+	fprintf(file, "1");
+	fclose(file);
+}
+
+static void disable_sysctl(void)
+{
+	FILE *file;
+	file = fopen("/proc/sys/kernel/latencytop", "w");
+	if (!file)
+		return;
+	fprintf(file, "0");
+	fclose(file);
+}
 
 int main(int argc, char **argv)
 {
-	init_translations("latencytop.trans");
+	int ret = 1;
+	enable_sysctl();
 	if (argc>1 && strcmp(argv[1],"-d")==0) {
+		init_translations("latencytop.trans");
 		parse_global_list();
 		sort_list();
 		dump_global_to_console();
@@ -457,19 +505,33 @@ int main(int argc, char **argv)
 		noui = 1;
 		dump_unknown = 1;
 	}
+
+	if (argc>1 && strcmp(argv[1],"--block")==0) {
+		printf("Doing block tracing\n");
+		init_translations("latencytop.block");
+		noui = 1;
+		dump_unknown = 1;
+	}
+	else
+		init_translations("/usr/share/latencytop/latencytop.trans");
+	
 	initialize_curses();
-	while (1 + argc || argv==NULL) {
+	while (ret) {
 		parse_processes();
 		prune_unused_procs();
 		parse_global_list();
 		sort_list();
 		if (!total_time)
 			total_time = 1;
-		update_display(30);
+		ret = update_display(30);
 		delete_list();
 		firsttime = 0;
 		if (noui)
 			fprintf(stderr, ".");
 	}
+	prune_unused_procs();
+	delete_list();
+	cleanup_curses();
+	disable_sysctl();
 	return EXIT_SUCCESS;
 }

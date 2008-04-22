@@ -15,7 +15,10 @@ struct process {
 	GList *latencies;
 	int used;
 	int exists;
+	/* scheduler stats */
         double maxdelay;
+        double totaldelay;
+        int delaycount;
 };
 
 extern GList *lines;
@@ -29,7 +32,7 @@ extern int noui;
 extern int dump_unknown;
 
 
-extern void update_display(int duration);
+extern int update_display(int duration);
 
 
 #define PT_COLOR_DEFAULT    1
