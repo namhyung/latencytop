@@ -17,7 +17,7 @@ include("topbar.php");
 <h3>Download</h3>
 <table>
 <tr class="odd"><th>File</th><th>Link</th></tr>
-<tr><td>userspace tool</td><td><a class="plainlink" href="download/latencytop-0.2.tar.gz">latencytop-0.2.tar.gz</a></td></tr>
+<tr><td>userspace tool</td><td><a class="plainlink" href="download/latencytop-0.4.tar.gz">latencytop-0.4.tar.gz</a></td></tr>
 
 <tr class="odd"><td>kernel patch</td><td><a class="plainlink" href="download/latencytop.patch">latencytop.patch</a></td></tr>
 
