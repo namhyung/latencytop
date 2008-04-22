@@ -1,4 +1,5 @@
 DESTDIR =
+SBINDIR = /usr/sbin
 XCFLAGS = -W `pkg-config --cflags glib-2.0` -D_FORTIFY_SOURCE=2 -Wno-sign-compare 
 LDF = -Wl,--as-needed `pkg-config --libs glib-2.0`   -lncursesw 
 
@@ -21,3 +22,8 @@ latencytop: latencytop.o display.o latencytop.h translate.o Makefile
 
 clean:
 	rm -f *~ latencytop DEADJOE *.o
+
+install: latencytop
+	mkdir -p $(DESTDIR)/usr/share/latencytop
+	install -m 0644 latencytop.trans $(DESTDIR)/usr/share/latencytop/latencytop.trans
+	install -m 0755 latencytop $(DESTDIR)$(SBINDIR)/

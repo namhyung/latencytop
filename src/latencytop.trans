@@ -2,7 +2,6 @@
 1	vfs_read		Reading from file
 1	vfs_write		Writing to file
 1	__mark_inode_dirty	Marking inode dirty
-1	vfs_ioctl		IOCTL
 1	vfs_readdir		Reading directory content
 1	vfs_unlink		Unlinking file
 1	blocking_notifier_call_chain	Blocking notifier
@@ -14,6 +13,7 @@
 2	sock_sendmsg		Sending data over socket
 2	do_sys_open		Opening file
 2	do_sys_poll		Waiting for event (poll)
+2	core_sys_select		Waiting for event (select)
 2	proc_reg_read		Reading from /proc file
 2	__pollwait		Waiting for event (poll)
 2	sys_fcntl		FCNTL system call

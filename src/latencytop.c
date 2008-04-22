@@ -513,7 +513,7 @@ int main(int argc, char **argv)
 		dump_unknown = 1;
 	}
 	else
-		init_translations("latencytop.trans");
+		init_translations("/usr/share/latencytop/latencytop.trans");
 	
 	initialize_curses();
 	while (ret) {
