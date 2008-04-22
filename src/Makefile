@@ -1,4 +1,5 @@
-CFLAGS = -O0 -g -Wall -W `pkg-config --cflags glib-2.0`  -D_FORTIFY_SOURCE=2 -Wno-sign-compare 
+DESTDIR =
+XCFLAGS = -W `pkg-config --cflags glib-2.0` -D_FORTIFY_SOURCE=2 -Wno-sign-compare 
 LDF = -Wl,--as-needed `pkg-config --libs glib-2.0`   -lncursesw 
 
 #
@@ -9,8 +10,13 @@ LDF = -Wl,--as-needed `pkg-config --libs glib-2.0`   -lncursesw
 # On Debian/Ubuntu distros, this can be found in the
 # libncursesw5-dev package. 
 #
+
+# We write explicity this "implicit rule"
+%.o : %.c
+	gcc -c $(CFLAGS) $(XCFLAGS) $< -o $@
+
 latencytop: latencytop.o display.o latencytop.h translate.o Makefile
-	gcc $(CFLAGS) latencytop.o display.o translate.o $(LDF)-o latencytop 
+	gcc $(CFLAGS) latencytop.o display.o translate.o $(LDF) -o latencytop 
 
 
 clean:

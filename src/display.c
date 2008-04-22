@@ -282,6 +282,7 @@ void print_process(unsigned int pid)
 			item2 = g_list_next(item2);
 			total = total + line->time;
 		}
+		mvwprintw(right_window, 0, 43, "Total: %5.1f msec", total*0.001);
 		wattroff(right_window, A_REVERSE);
 		item2 = g_list_first(proc->latencies);
 		while (item2 && i < 6) {

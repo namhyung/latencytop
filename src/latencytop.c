@@ -494,8 +494,8 @@ int main(int argc, char **argv)
 {
 	int ret = 1;
 	enable_sysctl();
-	init_translations("latencytop.trans");
 	if (argc>1 && strcmp(argv[1],"-d")==0) {
+		init_translations("latencytop.trans");
 		parse_global_list();
 		sort_list();
 		dump_global_to_console();
@@ -505,6 +505,16 @@ int main(int argc, char **argv)
 		noui = 1;
 		dump_unknown = 1;
 	}
+
+	if (argc>1 && strcmp(argv[1],"--block")==0) {
+		printf("Doing block tracing\n");
+		init_translations("latencytop.block");
+		noui = 1;
+		dump_unknown = 1;
+	}
+	else
+		init_translations("latencytop.trans");
+	
 	initialize_curses();
 	while (ret) {
 		parse_processes();
