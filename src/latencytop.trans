@@ -123,6 +123,8 @@
 3	lock_kernel		Big Kernel Lock contention
 3	blk_execute_rq		Submitting block IO
 3	scsi_cmd_ioctl		SCSI ioctl command
+3	acpi_ec_transaction	ACPI hardware access
+3	journal_get_undo_access	Waiting for EXT3 journal undo operation
 #
 #
 5	do_page_fault		Page fault
