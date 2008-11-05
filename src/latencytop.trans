@@ -128,7 +128,7 @@
 3	scsi_cmd_ioctl		SCSI ioctl command
 3	acpi_ec_transaction	ACPI hardware access
 3	journal_get_undo_access	Waiting for EXT3 journal undo operation
-3	i915_irq_wait		Waiting for VBLANK interrupt
+3	i915_irq_wait		Waiting for GPU interrupt
 3	i915_gem_throttle_ioctl	Throttling GPU while waiting for commands
 
 #

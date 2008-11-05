@@ -48,6 +48,8 @@ int firsttime = 1;
 int noui; 
 int dump_unknown;
 
+char *prefered_process;
+
 static void add_to_global(struct latency_line *line)
 {
 	GList *item;
@@ -391,6 +393,11 @@ void parse_processes(void)
 			line = NULL;
 		}
 
+		if (process->name && prefered_process && strcmp(process->name, prefered_process)==0) {
+			pid_with_max = pid;
+			pidmax = INT_MAX;
+		}
+
 		sprintf(filename, "/proc/%i/sched", pid);
 		file = fopen(filename, "r+");
 		if (file) {
@@ -506,14 +513,11 @@ int main(int argc, char **argv)
 		dump_unknown = 1;
 	}
 
-	if (argc>1 && strcmp(argv[1],"--block")==0) {
-		printf("Doing block tracing\n");
-		init_translations("latencytop.block");
-		noui = 1;
-		dump_unknown = 1;
-	}
-	else
-		init_translations("/usr/share/latencytop/latencytop.trans");
+	/* Allow you to specify a process name to track */
+	if (argc>1 && strncmp(argv[1],"-",1)!=0)
+		prefered_process = strdup(argv[1]);	
+
+	init_translations("/usr/share/latencytop/latencytop.trans");
 	if (!translations)
 		init_translations("latencytop.trans"); /* for those who don't do make install */
 	
