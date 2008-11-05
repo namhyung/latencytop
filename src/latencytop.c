@@ -514,6 +514,8 @@ int main(int argc, char **argv)
 	}
 	else
 		init_translations("/usr/share/latencytop/latencytop.trans");
+	if (!translations)
+		init_translations("latencytop.trans"); /* for those who don't do make install */
 	
 	initialize_curses();
 	while (ret) {

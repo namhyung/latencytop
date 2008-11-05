@@ -23,6 +23,7 @@ struct process {
 
 extern GList *lines;
 extern GList *procs;
+extern GList *translations;
 extern int total_time;
 extern int total_count;
 
