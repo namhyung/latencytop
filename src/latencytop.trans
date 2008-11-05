@@ -35,6 +35,9 @@
 2	usb_autoresume_device	Waking up USB device
 2	kswapd			kswapd() kernel thread
 2	md_thread		Raid resync kernel thread
+2	i915_wait_request	Waiting for GPU command to complete
+2	request_module		Loading a kernel module
+
 #
 3	tty_wait_until_sent	Waiting for TTY to finish sending
 3	pipe_read		Reading from a pipe
@@ -125,6 +128,9 @@
 3	scsi_cmd_ioctl		SCSI ioctl command
 3	acpi_ec_transaction	ACPI hardware access
 3	journal_get_undo_access	Waiting for EXT3 journal undo operation
+3	i915_irq_wait		Waiting for VBLANK interrupt
+3	i915_gem_throttle_ioctl	Throttling GPU while waiting for commands
+
 #
 #
 5	do_page_fault		Page fault
