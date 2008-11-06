@@ -47,3 +47,5 @@ extern void initialize_curses(void);
 extern char *translate(char *line);
 extern void init_translations(char *filename);
 extern void cleanup_curses(void);
+extern int fsync_display(int duration);
+

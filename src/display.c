@@ -372,6 +372,12 @@ int update_display(int duration)
 				cursor_e = NULL;
 				return 1;
 			}
+			if (keychar == 'F') {
+				endwin();
+				fsync_display(duration);
+				setup_windows();
+				show_title_bar();
+			}
 			if (keychar < 32)
 				repaint = 0;
 		}

@@ -1,6 +1,6 @@
 DESTDIR =
 SBINDIR = /usr/sbin
-XCFLAGS = -W `pkg-config --cflags glib-2.0` -D_FORTIFY_SOURCE=2 -Wno-sign-compare 
+XCFLAGS = -W  -g `pkg-config --cflags glib-2.0` -D_FORTIFY_SOURCE=2 -Wno-sign-compare 
 LDF = -Wl,--as-needed `pkg-config --libs glib-2.0`   -lncursesw 
 
 #
@@ -16,8 +16,8 @@ LDF = -Wl,--as-needed `pkg-config --libs glib-2.0`   -lncursesw
 %.o : %.c
 	gcc -c $(CFLAGS) $(XCFLAGS) $< -o $@
 
-latencytop: latencytop.o display.o latencytop.h translate.o Makefile
-	gcc $(CFLAGS) latencytop.o display.o translate.o $(LDF) -o latencytop 
+latencytop: latencytop.o display.o latencytop.h translate.o fsync.o Makefile
+	gcc $(CFLAGS) latencytop.o display.o translate.o fsync.o $(LDF) -o latencytop 
 
 
 clean:

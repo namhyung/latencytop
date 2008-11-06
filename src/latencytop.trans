@@ -140,5 +140,5 @@
 5	sys_nanosleep		Application requested delay
 5	sys_pause		Application requested delay
 5	evdev_read		Reading keyboard/mouse input
-5	do_fsync		fsync() on a file
+5	do_fsync		fsync() on a file (type 'F' for details)
 5	__log_wait_for_space	Waiting for EXT3 journal space
