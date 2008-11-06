@@ -249,6 +249,9 @@ static void print_global_list(void)
 	int i = 1, i2 = 0;
 	int y = 1;
 
+	werase(global_window);
+
+
 	mvwprintw(global_window, 0, 0, "Process        File");
 	item = g_list_first(fsync_data);
 	while (item && i < maxy-6) {
