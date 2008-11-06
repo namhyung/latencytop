@@ -316,7 +316,7 @@ int fsync_display(int duration)
 
 	fsync_setup_windows();
 	show_title_bar();
-	curduration = 5;
+	curduration = 3;
 	if (curduration > duration)
 		curduration = duration;
 	while (1) {
@@ -331,6 +331,8 @@ int fsync_display(int duration)
 			end.tv_usec += 1000000;
 		};
 		curduration = duration;
+		if (curduration > 5)
+			curduration = 5;
 		/* clear the ftrace buffer */
 		write_to_file("/sys/kernel/debug/tracing/tracing_enabled", "0");
 		write_to_file("/sys/kernel/debug/tracing/tracing_enabled", "1");
