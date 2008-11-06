@@ -513,6 +513,8 @@ int main(int argc, char **argv)
 		dump_unknown = 1;
 	}
 
+	enable_fsync_tracer();
+
 	/* Allow you to specify a process name to track */
 	if (argc>1 && strncmp(argv[1],"-",1)!=0)
 		prefered_process = strdup(argv[1]);	
@@ -539,5 +541,6 @@ int main(int argc, char **argv)
 	delete_list();
 	cleanup_curses();
 	disable_sysctl();
+	disable_fsync_tracer();
 	return EXIT_SUCCESS;
 }

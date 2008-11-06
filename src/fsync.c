@@ -139,7 +139,7 @@ static void write_to_file(char *filename, char *value)
 }
 
 
-static int enable_fsync_tracer(void)
+int enable_fsync_tracer(void)
 {
 	int ret;
 /*
@@ -159,7 +159,7 @@ static int enable_fsync_tracer(void)
 	write_to_file("/sys/kernel/debug/tracing/tracing_enabled", "1");
 }
 
-static int disable_fsync_tracer(void)
+int disable_fsync_tracer(void)
 {
 	write_to_file("/sys/kernel/debug/tracing/tracing_enabled", "0");
 }
@@ -312,13 +312,13 @@ int fsync_display(int duration)
 	fd_set rfds;
 	int curduration;
 
-	enable_fsync_tracer();
-
 	fsync_setup_windows();
 	show_title_bar();
 	curduration = 3;
 	if (curduration > duration)
 		curduration = duration;
+	parse_ftrace();
+	print_global_list();
 	while (1) {
 		FD_ZERO(&rfds);
 		FD_SET(0, &rfds);
@@ -351,7 +351,6 @@ int fsync_display(int duration)
 			keychar = toupper(keychar);
 			if (keychar == 'F') {
 				fsync_cleanup_curses();
-				disable_fsync_tracer();
 				return 1;
 			}
 		}

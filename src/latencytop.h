@@ -48,4 +48,6 @@ extern char *translate(char *line);
 extern void init_translations(char *filename);
 extern void cleanup_curses(void);
 extern int fsync_display(int duration);
+extern int enable_fsync_tracer(void);
+extern int disable_fsync_tracer(void);
 
