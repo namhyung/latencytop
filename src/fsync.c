@@ -103,14 +103,14 @@ static gint sort_files(gconstpointer A, gconstpointer B)
 {
 	struct fsync_files *a = (struct fsync_files *)A;
 	struct fsync_files *b = (struct fsync_files *)B;
-	return a->fsync_count > b->fsync_count;
+	return a->fsync_count < b->fsync_count;
 }
 
 static gint sort_process(gconstpointer A, gconstpointer B)
 {
 	struct fsync_process *a = (struct fsync_process *)A;
 	struct fsync_process *b = (struct fsync_process *)B;
-	return a->fsync_count > b->fsync_count;
+	return a->fsync_count < b->fsync_count;
 }
 
 static void sort_the_lot(void)
