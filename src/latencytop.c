@@ -500,6 +500,7 @@ static void disable_sysctl(void)
 int main(int argc, char **argv)
 {
 	int ret = 1;
+	char filterchar = '\0';
 	enable_sysctl();
 	if (argc>1 && strcmp(argv[1],"-d")==0) {
 		init_translations("latencytop.trans");
@@ -531,7 +532,7 @@ int main(int argc, char **argv)
 		sort_list();
 		if (!total_time)
 			total_time = 1;
-		ret = update_display(30);
+		ret = update_display(30, &filterchar);
 		delete_list();
 		firsttime = 0;
 		if (noui)

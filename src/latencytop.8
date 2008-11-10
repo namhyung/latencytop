@@ -1,4 +1,4 @@
-.TH LATENCYTOP 8 "February 12, 2008"
+.TH LATENCYTOP 8 "November 9, 2008"
 .\" Please adjust this date whenever revising the manpage.
 .\"
 .\" Some roff macros, for reference:
@@ -36,6 +36,15 @@ currently available (and the kernel then blocks the process). This is
 done both on a system level and on a per process level, so that you can
 see what's happening to the system, and which process is suffering
 and/or causing the delays. 
+
+You can walk the processes by using the cursor keys. If you press \fBs\fP 
+followed by a letter, then only active processes starting with that lettter
+are displayed and walked. If you press \fBs\fP followed by \fB0\fP then
+that filter is reset.
+
+If you press \fBf\fP then \fBLatencyTop\fP displays a list of all processes
+currently waiting for an \fBfsync\fP to finish. Pressing \fBf\fP again
+returns you to the normal operating mode of \fBLatencyTop\fP.
 
 .SH SEE ALSO
 .BR powertop (1)

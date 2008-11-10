@@ -356,6 +356,10 @@ int fsync_display(int duration)
 				fsync_cleanup_curses();
 				return 1;
 			}
+			if (keychar == 'Q') {
+				fsync_cleanup_curses();
+				return 0;
+			}
 		}
 	}
 
