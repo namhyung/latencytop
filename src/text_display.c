@@ -46,7 +46,7 @@ static WINDOW *right_window;
 static GList *cursor_e = NULL;
 
 
-void cleanup_curses(void) 
+static void cleanup_curses(void) 
 {
 	endwin();
 }
@@ -73,9 +73,9 @@ static void zap_windows(void)
 }
 
 
-int maxx, maxy;
+static int maxx, maxy;
 
-void setup_windows(void) 
+static void setup_windows(void) 
 {
 	int midy;
 	getmaxyx(stdscr, maxy, maxx);
@@ -92,44 +92,20 @@ void setup_windows(void)
 	refresh();
 }
 
-void initialize_curses(void) 
-{
-	if (noui)
-		return;
-	initscr();
-	start_color();
-	keypad(stdscr, TRUE);	/* enable keyboard mapping */
-	nonl();			/* tell curses not to do NL->CR/NL on output */
-	cbreak();		/* take input chars one at a time, no wait for \n */
-	noecho();		/* dont echo input */
-	curs_set(0);		/* turn off cursor */
-	use_default_colors();
-
-	init_pair(PT_COLOR_DEFAULT, COLOR_WHITE, COLOR_BLACK);
-	init_pair(PT_COLOR_HEADER_BAR, COLOR_BLACK, COLOR_WHITE);
-	init_pair(PT_COLOR_ERROR, COLOR_BLACK, COLOR_RED);
-	init_pair(PT_COLOR_RED, COLOR_WHITE, COLOR_RED);
-	init_pair(PT_COLOR_YELLOW, COLOR_WHITE, COLOR_YELLOW);
-	init_pair(PT_COLOR_GREEN, COLOR_WHITE, COLOR_GREEN);
-	init_pair(PT_COLOR_BRIGHT, COLOR_WHITE, COLOR_BLACK);
-	
-	atexit(cleanup_curses);
-}
-
-void show_title_bar(void) 
+static void show_title_bar(void) 
 {
 	wattrset(title_bar_window, COLOR_PAIR(PT_COLOR_HEADER_BAR));
 	wbkgd(title_bar_window, COLOR_PAIR(PT_COLOR_HEADER_BAR));   
 	werase(title_bar_window);
 
-	mvwprintw(title_bar_window, 0, 0,  "   LatencyTOP version 0.5       (C) 2008 Intel Corporation");
+	mvwprintw(title_bar_window, 0, 0,  "   LatencyTOP version "VERSION"       (C) 2008 Intel Corporation");
 
 	wrefresh(title_bar_window);
 }
 
 
 
-void print_global_list(void)
+static void print_global_list(void)
 {
 	GList *item;
 	struct latency_line *line;
@@ -154,7 +130,7 @@ void print_global_list(void)
 
 }
 
-void display_process_list(unsigned int cursor_pid, char filter)
+static void display_process_list(unsigned int cursor_pid, char filter)
 {
 	GList *entry, *start = NULL;
 	struct process *proc;
@@ -214,7 +190,7 @@ retry:
 	wrefresh(process_window);
 }
 
-int one_pid_back(unsigned int cursor_pid, char filter)
+static int one_pid_back(unsigned int cursor_pid, char filter)
 {
 	GList *entry, *start = NULL;
 	struct process *proc;
@@ -245,7 +221,7 @@ int one_pid_back(unsigned int cursor_pid, char filter)
 	return 0;
 }
 
-int one_pid_forward(unsigned int cursor_pid, char filter)
+static int one_pid_forward(unsigned int cursor_pid, char filter)
 {
 	GList *entry, *start = NULL;
 	struct process *proc;
@@ -276,7 +252,7 @@ int one_pid_forward(unsigned int cursor_pid, char filter)
 	return 0;
 }
 
-void print_process(unsigned int pid)
+static void print_process(unsigned int pid)
 {
 	struct process *proc;
 	GList *item;
@@ -325,7 +301,7 @@ void print_process(unsigned int pid)
 	wrefresh(right_window);
 }
 
-int done_yet(int time, struct timeval *p1)
+static int done_yet(int time, struct timeval *p1)
 {
 	int seconds;
 	int usecs;
@@ -342,19 +318,13 @@ int done_yet(int time, struct timeval *p1)
 
 
 
-int update_display(int duration, char *filterchar)
+static int update_display(int duration, char *filterchar)
 {
 	struct timeval start,end,now;
 	int key;
 	int repaint = 1;
 	fd_set rfds;
 
-	if (noui) {
-		if (duration > 5)
-			duration = 5;
-		sleep(duration);
-		return 1;
-	}
 	gettimeofday(&start, NULL);
 	setup_windows();
 	show_title_bar();
@@ -422,3 +392,38 @@ int update_display(int duration, char *filterchar)
 	cursor_e = NULL;
 	return 1;
 }
+
+void preinitialize_text_ui(int *argc, char ***argv)
+{
+}
+
+void start_text_ui(void) 
+{
+	char filterchar = '\0';
+	int ret = 1;
+
+	initscr();
+	start_color();
+	keypad(stdscr, TRUE);	/* enable keyboard mapping */
+	nonl();			/* tell curses not to do NL->CR/NL on output */
+	cbreak();		/* take input chars one at a time, no wait for \n */
+	noecho();		/* dont echo input */
+	curs_set(0);		/* turn off cursor */
+	use_default_colors();
+
+	init_pair(PT_COLOR_DEFAULT, COLOR_WHITE, COLOR_BLACK);
+	init_pair(PT_COLOR_HEADER_BAR, COLOR_BLACK, COLOR_WHITE);
+	init_pair(PT_COLOR_ERROR, COLOR_BLACK, COLOR_RED);
+	init_pair(PT_COLOR_RED, COLOR_WHITE, COLOR_RED);
+	init_pair(PT_COLOR_YELLOW, COLOR_WHITE, COLOR_YELLOW);
+	init_pair(PT_COLOR_GREEN, COLOR_WHITE, COLOR_GREEN);
+	init_pair(PT_COLOR_BRIGHT, COLOR_WHITE, COLOR_BLACK);
+	
+	atexit(cleanup_curses);
+
+	while (ret) {
+		update_list();
+		ret = update_display(30, &filterchar);
+	}
+}
+

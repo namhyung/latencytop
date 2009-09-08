@@ -90,6 +90,29 @@ static void add_to_process(struct process *process, struct latency_line *line)
 	process->latencies = g_list_append(process->latencies, line);
 }
 
+static void fixup_reason(struct latency_line *line, char *c)
+{
+	char *c2;
+
+	c2 = strchr(c, '\n');
+	if (c2)
+		*c2=0;
+	while (c[0]==' ')
+		c++;
+	strncpy(line->backtrace, c, 4096);
+	c2 = translate(c);
+	if (c2 == NULL) {
+		line->reason[0] = '[';
+		strncpy(line->reason + 1, c, 1022);
+		for (c2 = line->reason + 1; *c2 && (c2 - line->reason) < 1022; c2++)
+			if (*c2 == ' ')
+				break;
+		*(c2++) = ']';
+		*(c2++) = 0;
+	} else
+		strncpy(line->reason, c2, 1024);
+}
+
 void parse_global_list(void)
 {
 	FILE *file;
@@ -97,7 +120,6 @@ void parse_global_list(void)
 	size_t dummy;
 	file = fopen("/proc/latency_stats","r+");
 	if (!file) {
-		cleanup_curses() ;
 		fprintf(stderr, "Please enable the CONFIG_LATENCYTOP configuration in your kernel.\n");
 		fprintf(stderr, "Exiting...\n");
 		exit(EXIT_FAILURE);
@@ -114,7 +136,7 @@ void parse_global_list(void)
 	total_count = 0;
 	while (!feof(file)) {
 		struct latency_line *line;
-		char *c, *c2;
+		char *c;
 		ln = NULL;
 		if (getline(&ln, &dummy, file) < 0) {
 			free(ln);
@@ -131,11 +153,7 @@ void parse_global_list(void)
 		line->max = strtoull(c, &c, 10);
 		total_time += line->time;
 		total_count += line->count;
-		c2 = strchr(c, '\n');
-		if (c2) *c2=0;
-		while (c[0]==' ') c++;
-		strcpy(line->reason, translate(c));
-
+		fixup_reason(line, c);
 		add_to_global(line);
 		free(ln);
 		ln = NULL;
@@ -182,6 +200,7 @@ void delete_list(void)
 	GList *entry, *entry2,*next;
 	struct latency_line *line;
 	struct process *proc;
+
 	while (lines) {
 		entry = g_list_first(lines);
 		line = entry->data;
@@ -286,11 +305,7 @@ void parse_process(struct process *process)
 			ln->count = strtoull(line, &c, 10);
 			ln->time = strtoull(c, &c, 10);
 			ln->max = strtoull(c, &c, 10);
-			c2 = strchr(c, '\n');
-			if (c2) *c2=0;
-			if (*c==' ') c++;
-			if (*c=='\t') c++;
-			strcpy(ln->reason, translate(c));
+			fixup_reason(ln, c);
 
 			if (ln->max > process->max)
 				process->max = ln->max;
@@ -497,51 +512,77 @@ static void disable_sysctl(void)
 	fclose(file);
 }
 
+void update_list(void)
+{
+	delete_list();
+	parse_processes();
+	prune_unused_procs();
+	parse_global_list();
+	sort_list();
+	if (!total_time)
+		total_time = 1;
+	firsttime = 0;
+}
+
+static void cleanup_sysctl(void) 
+{
+	disable_sysctl();
+	disable_fsync_tracer();
+}
+
 int main(int argc, char **argv)
 {
-	int ret = 1;
-	char filterchar = '\0';
-	enable_sysctl();
-	if (argc>1 && strcmp(argv[1],"-d")==0) {
-		init_translations("latencytop.trans");
-		parse_global_list();
-		sort_list();
-		dump_global_to_console();
-		return EXIT_SUCCESS;
-	}
-	if (argc>1 && strcmp(argv[1],"--unknown")==0) {
-		noui = 1;
-		dump_unknown = 1;
-	}
+	int i, use_gtk = 0;
 
+	enable_sysctl();
 	enable_fsync_tracer();
+	atexit(cleanup_sysctl);
+
+#ifdef HAS_GTK_GUI
+	if (preinitialize_gtk_ui(&argc, &argv))
+		use_gtk = 1;
+#endif
+	if (!use_gtk)
+		preinitialize_text_ui(&argc, &argv);
+
+	for (i = 1; i < argc; i++)		
+		if (strcmp(argv[i],"-d") == 0) {
+			init_translations("latencytop.trans");
+			parse_global_list();
+			sort_list();
+			dump_global_to_console();
+			return EXIT_SUCCESS;
+		}
+	for (i = 1; i < argc; i++)
+		if (strcmp(argv[i], "--unknown") == 0) {
+			noui = 1;
+			dump_unknown = 1;
+		}
 
 	/* Allow you to specify a process name to track */
-	if (argc>1 && strncmp(argv[1],"-",1)!=0)
-		prefered_process = strdup(argv[1]);	
+	for (i = 1; i < argc; i++)
+		if (argv[i][0] != '-') {
+			prefered_process = strdup(argv[i]);
+			break;
+		}
 
 	init_translations("/usr/share/latencytop/latencytop.trans");
 	if (!translations)
 		init_translations("latencytop.trans"); /* for those who don't do make install */
 	
-	initialize_curses();
-	while (ret) {
-		parse_processes();
-		prune_unused_procs();
-		parse_global_list();
-		sort_list();
-		if (!total_time)
-			total_time = 1;
-		ret = update_display(30, &filterchar);
-		delete_list();
-		firsttime = 0;
-		if (noui)
-			fprintf(stderr, ".");
+	while (noui) {
+		sleep(5);
+		fprintf(stderr, ".");
 	}
+#ifdef HAS_GTK_GUI
+	if (use_gtk)
+		start_gtk_ui();
+	else
+#endif
+		start_text_ui();
+
 	prune_unused_procs();
 	delete_list();
-	cleanup_curses();
-	disable_sysctl();
-	disable_fsync_tracer();
+
 	return EXIT_SUCCESS;
 }

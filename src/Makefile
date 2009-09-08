@@ -1,7 +1,19 @@
+# FIXME: Use autoconf ?
+HAS_GTK_GUI = 1
+
 DESTDIR =
 SBINDIR = /usr/sbin
-XCFLAGS = -W  -g `pkg-config --cflags glib-2.0` -D_FORTIFY_SOURCE=2 -Wno-sign-compare 
+XCFLAGS = -W  -g `pkg-config --cflags glib-2.0` -D_FORTIFY_SOURCE=2 -Wno-sign-compare
 LDF = -Wl,--as-needed `pkg-config --libs glib-2.0`   -lncursesw 
+
+OBJS= latencytop.o text_display.o translate.o fsync.o
+
+ifdef HAS_GTK_GUI
+  XCFLAGS += `pkg-config --cflags gtk+-2.0` -DHAS_GTK_GUI
+  LDF += `pkg-config --libs gtk+-2.0`
+  OBJS += gtk_display.o 
+endif
+
 
 #
 # The w in -lncursesw is not a typo; it is the wide-character version
@@ -16,9 +28,8 @@ LDF = -Wl,--as-needed `pkg-config --libs glib-2.0`   -lncursesw
 %.o : %.c
 	gcc -c $(CFLAGS) $(XCFLAGS) $< -o $@
 
-latencytop: latencytop.o display.o latencytop.h translate.o fsync.o Makefile
-	gcc $(CFLAGS) latencytop.o display.o translate.o fsync.o $(LDF) -o latencytop 
-
+latencytop:  $(OBJS) latencytop.h Makefile
+	gcc $(CFLAGS) $(OBJS) $(LDF) -o latencytop 
 
 clean:
 	rm -f *~ latencytop DEADJOE *.o
@@ -26,4 +37,5 @@ clean:
 install: latencytop
 	mkdir -p $(DESTDIR)/usr/share/latencytop
 	install -m 0644 latencytop.trans $(DESTDIR)/usr/share/latencytop/latencytop.trans
+	install -m 0644 *.png $(DESTDIR)/usr/share/latencytop/
 	install -m 0755 latencytop $(DESTDIR)$(SBINDIR)/
