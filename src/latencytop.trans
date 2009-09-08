@@ -7,6 +7,8 @@
 1	blocking_notifier_call_chain	Blocking notifier
 1	lock_super		Superblock lock contention
 1	vfs_create		Creating a file
+1	KAS_ScheduleTimeout	Binary AMD driver delay
+1	firegl_lock_device	Binary AMD driver delay
 #
 2	__bread			Synchronous buffer read
 2	do_generic_mapping_read	Reading file data
