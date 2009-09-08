@@ -36,6 +36,7 @@ clean:
 
 install: latencytop
 	mkdir -p $(DESTDIR)/usr/share/latencytop
+	mkdir -p $(DESTDIR)/$(SBINDIR)
 	install -m 0644 latencytop.trans $(DESTDIR)/usr/share/latencytop/latencytop.trans
 	install -m 0644 *.png $(DESTDIR)/usr/share/latencytop/
 	install -m 0755 latencytop $(DESTDIR)$(SBINDIR)/
