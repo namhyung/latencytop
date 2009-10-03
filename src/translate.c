@@ -49,12 +49,12 @@ char *translate(char *line)
 {
 	char buffer[4096], *c, *c2;
 	int prio = 0;
-	char *selected = line;
+	char *selected = NULL;
 	GList *item;
 	struct translate_line *trans;
 
 	memset(buffer, 0, 4096);	
-	strcpy(buffer, line);
+	strncpy(buffer, line, 4096);
 
 	c2 = buffer;
 	while (c2[0] == ' ') c2++;

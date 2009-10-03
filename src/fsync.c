@@ -204,6 +204,7 @@ static void fsync_setup_windows(void)
 	refresh();
 }
 
+#if 0 /* Dead code */
 static void fsync_initialize_curses(void) 
 {
 	if (noui)
@@ -227,6 +228,7 @@ static void fsync_initialize_curses(void)
 	
 	atexit(cleanup_curses);
 }
+#endif
 
 static void show_title_bar(void) 
 {
