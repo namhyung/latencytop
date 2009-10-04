@@ -51,7 +51,7 @@ static GdkPixbuf *global_icon;
 static GdkPixbuf *kthread_icon;
 static GdkPixbuf *process_icon;
 
-static unsigned int cur_target_pid;
+static struct process *cur_target_proc;
 
 static int countdown;
 static int countdown_max = 30;
@@ -122,7 +122,7 @@ static void insert_all_targets(void)
 	                    -1);
 
 	/* Select it if it's our current target */
-	if (cur_target_pid == 0)
+	if (cur_target_proc == NULL)
 		path = gtk_tree_model_get_path(GTK_TREE_MODEL(targets_model), &iter);
 
 	/* The core doesn't sort the list, we do here */
@@ -138,7 +138,7 @@ static void insert_all_targets(void)
 			strcmp(proc->name, prefered_process) == 0;
 
 		/* Skip too small values */
-		if (!preferred && (proc->max * 0.001 < 0.1))
+		if (!preferred && !proc->pinned && (proc->max * 0.001 < 0.1))
 			continue;
 
 		if (preferred)
@@ -160,7 +160,7 @@ static void insert_all_targets(void)
 				   COL_T_MAX, maxstr,
 				   COL_T_PROC, proc,
 				   -1);
-		if (cur_target_pid == proc->pid)
+		if (cur_target_proc == proc)
 			path = gtk_tree_model_get_path(GTK_TREE_MODEL(targets_model), &iter);
 		g_free(esctext);
 	}
@@ -258,12 +258,18 @@ static gint target_select(GtkTreeSelection *sel, void *data)
 	if (ignore_sel)
 		return TRUE;
 
-	if (proc && (force_results || proc->pid != cur_target_pid)) {
-		cur_target_pid = proc->pid;
+	if (cur_target_proc && cur_target_proc != proc) {
+		cur_target_proc->pinned--;
+		cur_target_proc = NULL;
+	}
+
+	if (proc && (force_results || proc != cur_target_proc)) {
+		cur_target_proc = proc;
 		remove_all_results();
 		insert_results(proc->latencies);
-	} else if (!proc && (force_results || cur_target_pid != 0)) {
-		cur_target_pid = 0;
+		proc->pinned++;
+	} else if (!proc && (force_results || cur_target_proc != NULL)) {
+		cur_target_proc = NULL;
 		remove_all_results();
 		insert_results(lines);
 	}
@@ -295,6 +301,8 @@ static gint backtrace_select(GtkTreeSelection *sel, void *data)
 
 static void do_refresh(void)
 {
+	struct process *old_target_proc = cur_target_proc;
+
 	/* Ignore selection messages triggerd by the list during those updates */
 	ignore_sel = TRUE;
 
@@ -310,6 +318,10 @@ static void do_refresh(void)
 
 	/* Insert all targets again */
 	insert_all_targets();
+
+	/* Clean up old pin as refresh will have re-increased */
+	if (old_target_proc)
+		old_target_proc->pinned--;
 
 	/* Make them look good */
 	gtk_tree_view_columns_autosize(GTK_TREE_VIEW(targets_view));
@@ -592,7 +604,7 @@ static void create_targets_window(void)
 
 	/* Add the countdown */
 	countdown_label = gtk_label_new("");
-	gtk_box_pack_end(GTK_BOX(hbox), countdown_label, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(hbox), countdown_label, FALSE, FALSE, 0);
 	btn = gtk_button_new_with_label("Refresh");
 	gtk_box_pack_end(GTK_BOX(hbox), btn, FALSE, FALSE, 0);
 	g_signal_connect(G_OBJECT(btn), "clicked",

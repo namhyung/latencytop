@@ -18,6 +18,7 @@ struct process {
 	GList *latencies;
 	int used;
 	int exists;
+	int pinned;
 	/* scheduler stats */
         double maxdelay;
         double totaldelay;

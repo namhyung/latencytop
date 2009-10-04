@@ -218,7 +218,7 @@ void delete_list(void)
 			proc->latencies = g_list_delete_link(proc->latencies, entry2);
 		}
 		proc->max = 0;
-		if (!proc->exists) {
+		if (!proc->exists && !proc->pinned) {
 			free(proc);
 			allprocs = g_list_delete_link(allprocs, entry);
 		}
@@ -238,7 +238,7 @@ void prune_unused_procs(void)
 	while (entry) {
 		proc = entry->data;
 		entry2 = g_list_next(entry);
-		if (!proc->used) {
+		if (!proc->used && !proc->pinned) {
 			while (proc->latencies) {
 				entry2 = g_list_first(proc->latencies);
 				line = entry2->data;
@@ -379,6 +379,9 @@ void parse_processes(void)
 	dir = opendir("/proc");
 	if (!dir)
 		return;
+
+	/* Should we loop and clear exists and/or used here ? */
+
 	while ((dirent = readdir(dir))) {
 		FILE *file;
 		char *line;
@@ -459,8 +462,10 @@ void parse_processes(void)
 
 		parse_process(process);
 
-		if (process->latencies) {
+		/* If process is pinned, we always add it to the list */
+		if (process->latencies)
 			process->latencies = g_list_sort(process->latencies, comparef);
+		if (process->latencies || process->pinned) {
 			if (!process->kernelthread && pidmax < process->max) {	
 				pidmax = process->max;
 				pid_with_max = process->pid;
