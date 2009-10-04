@@ -1,4 +1,4 @@
-#define VERSION "0.5-benh"
+#define VERSION "0.5"
 
 struct latency_line;
 
