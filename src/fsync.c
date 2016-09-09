@@ -288,7 +288,8 @@ static void parse_ftrace(void)
 	while (!feof(file)) {
 		char *c, *c2;
 		memset(line, 0, PATH_MAX);
-		fgets(line, PATH_MAX-1, file);
+		if (!fgets(line, PATH_MAX-1, file))
+			break;
 		c = strchr(line, '\n');
 		if (c) *c = 0;
 		c = strstr(line, "probe_do_fsync: Process ");
