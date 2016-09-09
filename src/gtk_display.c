@@ -615,7 +615,7 @@ static void create_targets_window(void)
 			 G_CALLBACK(freeze_toggled), NULL);
 }
 
-static load_icons(void)
+static void load_icons(void)
 {
 	GError *err;
 
