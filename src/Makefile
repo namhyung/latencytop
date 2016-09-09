@@ -1,5 +1,6 @@
-# FIXME: Use autoconf ?
-HAS_GTK_GUI = 1
+ifeq ($(shell pkg-config --exists gtk+-2.0 && echo yes),yes)
+  HAS_GTK_GUI = 1
+endif
 
 DESTDIR =
 SBINDIR = /usr/sbin
