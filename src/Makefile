@@ -3,7 +3,7 @@ HAS_GTK_GUI = 1
 
 DESTDIR =
 SBINDIR = /usr/sbin
-XCFLAGS = -W  -g `pkg-config --cflags glib-2.0` -D_FORTIFY_SOURCE=2 -Wno-sign-compare
+XCFLAGS = -W  -g `pkg-config --cflags glib-2.0` -D_FORTIFY_SOURCE=2 -O2 -Wno-sign-compare
 LDF = -Wl,--as-needed `pkg-config --libs glib-2.0`   -lncursesw 
 
 OBJS= latencytop.o text_display.o translate.o fsync.o
