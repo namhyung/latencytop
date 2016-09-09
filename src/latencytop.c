@@ -571,7 +571,7 @@ int main(int argc, char **argv)
 			break;
 		}
 
-	init_translations("/usr/share/latencytop/latencytop.trans");
+	init_translations(PREFIX_DIR "/share/latencytop/latencytop.trans");
 	if (!translations)
 		init_translations("latencytop.trans"); /* for those who don't do make install */
 	
