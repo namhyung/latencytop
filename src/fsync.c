@@ -32,6 +32,7 @@
 #include <time.h>
 #include <wchar.h>
 #include <ctype.h>
+#include <sys/time.h>
 
 #include <glib.h>
 
