@@ -532,7 +532,6 @@ void update_list(void)
 static void cleanup_sysctl(void) 
 {
 	disable_sysctl();
-	disable_fsync_tracer();
 }
 
 int main(int argc, char **argv)
@@ -540,7 +539,6 @@ int main(int argc, char **argv)
 	int i, use_gtk = 0;
 
 	enable_sysctl();
-	enable_fsync_tracer();
 	atexit(cleanup_sysctl);
 
 #ifdef HAS_GTK_GUI
